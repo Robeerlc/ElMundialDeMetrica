@@ -1,4 +1,4 @@
-package com.metrica.porramundial.porramundialmetrica;
+package com.metrica.porramundial;
 
 import org.junit.jupiter.api.Test;
 import org.springframework.boot.test.context.SpringBootTest;
