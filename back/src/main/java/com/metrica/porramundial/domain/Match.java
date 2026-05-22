@@ -1,12 +1,17 @@
 package com.metrica.porramundial.domain;
 
-import java.time.LocalDateTime;
 import jakarta.persistence.*;
 import lombok.*;
 
+import java.time.LocalDateTime;
+
 @Entity
 @Table(name = "matches")
-@Getter @Setter @NoArgsConstructor @AllArgsConstructor @Builder
+@Getter
+@Setter
+@NoArgsConstructor
+@AllArgsConstructor
+@Builder
 public class Match {
 
     @Id
