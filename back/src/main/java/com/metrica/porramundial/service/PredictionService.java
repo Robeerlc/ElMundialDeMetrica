@@ -61,6 +61,10 @@ public class PredictionService {
         User user = userOp.get();
         Match match = matchOp.get();
         
+        if (match.getIsLocked()) {
+            return new PredictionDataType.Fail("Match is locked!");
+        }
+        
         Prediction prediction = Prediction.builder()
                                           .user(user)
                                           .match(match)
