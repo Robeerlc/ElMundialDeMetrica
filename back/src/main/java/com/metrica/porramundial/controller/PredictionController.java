@@ -2,6 +2,7 @@ package com.metrica.porramundial.controller;
 
 import java.util.List;
 
+import org.springframework.security.core.Authentication;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -39,7 +40,7 @@ public class PredictionController {
     }
     
     @PostMapping
-    public ResponseEntity<?> createPrediction(@RequestBody PredictionCreationRequest pcr) {
-        return PredictionDataType.response(this.predictionService.createPrediction(pcr));
+    public ResponseEntity<?> createPrediction(@RequestBody PredictionCreationRequest pcr, Authentication authentication) {
+        return PredictionDataType.response(this.predictionService.createPrediction(pcr, authentication));
     }
 }

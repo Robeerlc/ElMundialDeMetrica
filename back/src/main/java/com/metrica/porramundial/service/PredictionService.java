@@ -3,6 +3,7 @@ package com.metrica.porramundial.service;
 import java.util.List;
 import java.util.Optional;
 
+import org.springframework.security.core.Authentication;
 import org.springframework.stereotype.Service;
 
 import com.metrica.porramundial.domain.Match;
@@ -51,8 +52,10 @@ public class PredictionService {
                 .toList();
     }
     
-    public PredictionDataType createPrediction(PredictionCreationRequest pcr) {
-        Optional<User> userOp = this.userRepository.findById(pcr.idUser());
+    public PredictionDataType createPrediction(PredictionCreationRequest pcr, Authentication authentication) {
+        String username = authentication.getName();
+
+        Optional<User> userOp = this.userRepository.findByEmail(username);
         if (userOp.isEmpty()) { return new PredictionDataType.Fail("User not found"); }
         
         Optional<Match> matchOp = matchRepository.findById(pcr.idMatch());
