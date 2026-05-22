@@ -64,6 +64,10 @@ public class PredictionService {
         if (match.getIsLocked()) {
             return new PredictionDataType.Fail("Match is locked!");
         }
+
+        if (this.predictionRepository.findByUserAndMatch(user, match).isPresent()) {
+            return new PredictionDataType.Fail("Already made a prediction");
+        }
         
         Prediction prediction = Prediction.builder()
                                           .user(user)
