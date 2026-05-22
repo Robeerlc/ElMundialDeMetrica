@@ -5,7 +5,11 @@ import lombok.*;
 
 @Entity
 @Table(name = "prediction_history")
-@Getter @Setter @NoArgsConstructor @AllArgsConstructor @Builder
+@Getter
+@Setter
+@NoArgsConstructor
+@AllArgsConstructor
+@Builder
 public class PredictionHistory {
 
     @Id
