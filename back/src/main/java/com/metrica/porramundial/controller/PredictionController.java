@@ -4,9 +4,10 @@ import java.util.List;
 
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.metrica.porramundial.dto.predictions.PredictionCreationRequest;
@@ -14,7 +15,6 @@ import com.metrica.porramundial.dto.predictions.PredictionDataType;
 import com.metrica.porramundial.dto.predictions.PredictionResponse;
 import com.metrica.porramundial.service.PredictionService;
 
-import io.swagger.v3.oas.annotations.parameters.RequestBody;
 import lombok.RequiredArgsConstructor;
 
 @RestController
@@ -29,12 +29,12 @@ public class PredictionController {
     }
     
     @GetMapping("/{id}")
-    public ResponseEntity<PredictionResponse> getPredictionById(@RequestParam Long id) {
+    public ResponseEntity<PredictionResponse> getPredictionById(@PathVariable Long id) {
         return ResponseEntity.of(this.predictionService.getPredictionById(id));
     }
     
     @GetMapping("/user/{userId}")
-    public ResponseEntity<List<PredictionResponse>> getPredictionsByUser(@RequestParam Long userId) {
+    public ResponseEntity<List<PredictionResponse>> getPredictionsByUser(@PathVariable Long userId) {
         return ResponseEntity.ok(this.predictionService.getPredictionsByUser(userId));
     }
     
