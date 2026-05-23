@@ -18,8 +18,8 @@ public class PredictionHistory {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @ManyToOne(optional = false, fetch = FetchType.LAZY)
-    @JoinColumn(name = "user_id")
+    @OneToOne(optional = false, fetch = FetchType.LAZY)
+    @JoinColumn(name = "user_id", unique = true)
     private User user;
 
     @OneToMany(cascade = CascadeType.ALL, orphanRemoval = true)
