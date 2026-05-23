@@ -8,6 +8,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
+import java.util.Objects;
 
 @Service
 @RequiredArgsConstructor
@@ -49,18 +50,19 @@ public class ScoringService {
         int realHome = match.getHomeGoals();
         int realAway = match.getAwayGoals();
 
-        int predDiff = predHome - predAway;
-        int realDiff = realHome - realAway;
+        boolean correctWinner = Objects.equals(prediction.getWinningTeam(), match.getWinningTeam());
+        boolean correctDiff   = (predHome - predAway) == (realHome - realAway);
+        boolean exactScore    = predHome == realHome && predAway == realAway;
 
         PredictionResultType resultType;
-        if (predHome == realHome && predAway == realAway) {
-            resultType = PredictionResultType.EXACT_MATCH;
-        } else if (predDiff == realDiff) {
-            resultType = PredictionResultType.GOAL_DIFFERENCE;
-        } else if (Integer.signum(predDiff) == Integer.signum(realDiff)) {
-            resultType = PredictionResultType.WINNER;
-        } else {
+        if (!correctWinner) {
             resultType = PredictionResultType.LOST;
+        } else if (exactScore) {
+            resultType = PredictionResultType.EXACT_MATCH;
+        } else if (correctDiff) {
+            resultType = PredictionResultType.GOAL_DIFFERENCE;
+        } else {
+            resultType = PredictionResultType.WINNER;
         }
 
         prediction.setPointsEarned(resultType.getPoints() * match.getPhase().getMultiplier());
