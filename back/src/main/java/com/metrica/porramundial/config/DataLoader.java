@@ -70,7 +70,7 @@ public class DataLoader implements CommandLineRunner {
                     System.out.println("DataLoader: " + matchesToSave.size() + " partidos del Mundial inyectados con éxito");
                 }
             } catch (Exception e) {
-                System.err.println("❌ Error con Football-Data: " + e.getMessage());
+                System.err.println("Error con Football-Data: " + e.getMessage());
             }
         }
     }
