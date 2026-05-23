@@ -18,6 +18,7 @@ import com.metrica.porramundial.repository.PredictionHistoryRepository;
 import com.metrica.porramundial.repository.PredictionRepository;
 import com.metrica.porramundial.repository.UserRepository;
 
+import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 
 @Service
@@ -55,6 +56,7 @@ public class PredictionService {
                 .toList();
     }
     
+    @Transactional
     public PredictionDataType createPrediction(PredictionCreationRequest pcr, Authentication authentication) {
         String username = authentication.getName();
 
