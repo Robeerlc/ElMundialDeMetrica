@@ -18,12 +18,19 @@ public class LiveMatchUpdaterService {
     private final MatchRepository matchRepository;
     private final MatchService matchService;
     private final RestClient restClient;
-
-    public LiveMatchUpdaterService(MatchRepository matchRepository, MatchService matchService, @Value("${api.footballdata.url}") String apiUrl, @Value("${api.footballdata.key}") String apiKey) {
-
+    private final ScoringService scoringService;
+    
+    public LiveMatchUpdaterService(
+            MatchRepository matchRepository,
+            MatchService matchService,
+            @Value("${api.footballdata.url}") String apiUrl,
+            @Value("${api.footballdata.key}") String apiKey,
+            ScoringService scoringService
+    ) {
         this.matchRepository = matchRepository;
         this.matchService = matchService;
         this.restClient = RestClient.builder().baseUrl(apiUrl).defaultHeader("X-Auth-Token", apiKey).build();
+        this.scoringService = scoringService;
     }
 
     @Scheduled(fixedRate = 300000)
@@ -57,10 +64,18 @@ public class LiveMatchUpdaterService {
                         }
 
                         if ("FINISHED".equals(liveFixture.status())) {
+                            if (dbMatch.getStatus() == MatchStatus.FINISHED) {
+                                continue;
+                            }
+                            
                             String winningTeam = null;
                             if (homeGoals > awayGoals) winningTeam = apiHomeTeam;
                             else if (awayGoals > homeGoals) winningTeam = apiAwayTeam;
+                            dbMatch.setHomeGoals(homeGoals);
+                            dbMatch.setAwayGoals(awayGoals);
+                            dbMatch.setWinningTeam(winningTeam);
                             matchService.updateMatchResult(dbMatch.getId(), new MatchResultRequest(homeGoals, awayGoals, winningTeam));
+                            this.scoringService.scoreMatch(dbMatch);
                         } else {
                             dbMatch.setHomeGoals(homeGoals);
                             dbMatch.setAwayGoals(awayGoals);

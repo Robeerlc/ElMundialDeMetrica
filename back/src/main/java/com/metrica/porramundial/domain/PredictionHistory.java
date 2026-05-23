@@ -2,6 +2,8 @@ package com.metrica.porramundial.domain;
 
 import jakarta.persistence.*;
 import lombok.*;
+import java.util.ArrayList;
+import java.util.List;
 
 @Entity
 @Table(name = "prediction_history")
@@ -20,14 +22,22 @@ public class PredictionHistory {
     @JoinColumn(name = "user_id")
     private User user;
 
-    @ManyToOne(optional = false, fetch = FetchType.LAZY)
-    @JoinColumn(name = "match_id")
-    private Match match;
+    @OneToMany(cascade = CascadeType.ALL, orphanRemoval = true)
+    @JoinColumn(name = "prediction_history_id")
+    @Builder.Default
+    private List<Prediction> predictions = new ArrayList<>();
 
-    @ManyToOne(optional = false, fetch = FetchType.LAZY)
-    @JoinColumn(name = "prediction_id")
-    private Prediction prediction;
+    @Builder.Default
+    private Integer totalPoints = 0;
 
-    @Column(nullable = false)
-    private Integer pointsEarned;
+    public void addPrediction(Prediction prediction) {
+        predictions.add(prediction);
+        totalPoints += prediction.getPointsEarned();
+    }
+    
+    public void recalculate() {
+        this.totalPoints = predictions.stream()
+                .mapToInt(p -> p.getPointsEarned() != null ? p.getPointsEarned() : 0)
+                .sum();
+    }
 }
