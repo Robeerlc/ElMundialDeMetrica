@@ -1,10 +1,10 @@
 package com.metrica.porramundial.service;
 
-import com.metrica.porramundial.domain.Match;
-import com.metrica.porramundial.domain.MatchStatus;
-import com.metrica.porramundial.domain.TournamentPhase;
-import com.metrica.porramundial.dto.MatchCreateRequest;
-import com.metrica.porramundial.dto.MatchResultRequest;
+import com.metrica.porramundial.domain.entity.Match;
+import com.metrica.porramundial.domain.enums.MatchStatus;
+import com.metrica.porramundial.domain.enums.TournamentPhase;
+import com.metrica.porramundial.dto.match.MatchCreateRequest;
+import com.metrica.porramundial.dto.match.MatchResultRequest;
 import com.metrica.porramundial.repository.MatchRepository;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;

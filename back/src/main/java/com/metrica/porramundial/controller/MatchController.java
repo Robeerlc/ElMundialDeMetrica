@@ -1,9 +1,9 @@
 package com.metrica.porramundial.controller;
 
-import com.metrica.porramundial.domain.Match;
-import com.metrica.porramundial.domain.TournamentPhase;
-import com.metrica.porramundial.dto.MatchCreateRequest;
-import com.metrica.porramundial.dto.MatchResultRequest;
+import com.metrica.porramundial.domain.entity.Match;
+import com.metrica.porramundial.domain.enums.TournamentPhase;
+import com.metrica.porramundial.dto.match.MatchCreateRequest;
+import com.metrica.porramundial.dto.match.MatchResultRequest;
 import com.metrica.porramundial.service.MatchService;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;

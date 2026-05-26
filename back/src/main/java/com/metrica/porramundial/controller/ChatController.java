@@ -1,7 +1,7 @@
 package com.metrica.porramundial.controller;
 
-import com.metrica.porramundial.domain.ChatMessage;
-import com.metrica.porramundial.dto.ChatInputRequest;
+import com.metrica.porramundial.domain.entity.ChatMessage;
+import com.metrica.porramundial.dto.chat.ChatInputRequest;
 import com.metrica.porramundial.repository.ChatMessageRepository;
 import org.springframework.messaging.handler.annotation.MessageMapping;
 import org.springframework.messaging.handler.annotation.SendTo;

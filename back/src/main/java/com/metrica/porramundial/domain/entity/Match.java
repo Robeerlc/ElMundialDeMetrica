@@ -1,4 +1,4 @@
-package com.metrica.porramundial.domain;
+package com.metrica.porramundial.domain.entity;
 
 import jakarta.persistence.*;
 import lombok.*;
@@ -31,10 +31,10 @@ public class Match {
     private LocalDateTime endTime;
 
     @Enumerated(EnumType.STRING)
-    private MatchStatus status;
+    private com.metrica.porramundial.domain.enums.MatchStatus status;
 
     @Enumerated(EnumType.STRING)
-    private TournamentPhase phase;
+    private com.metrica.porramundial.domain.enums.TournamentPhase phase;
 
     private String winningTeam;
 
@@ -42,3 +42,4 @@ public class Match {
     @Builder.Default
     private Boolean isLocked = false;
 }
+

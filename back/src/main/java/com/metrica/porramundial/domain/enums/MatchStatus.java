@@ -1,4 +1,4 @@
-package com.metrica.porramundial.domain;
+package com.metrica.porramundial.domain.enums;
 
 public enum MatchStatus {
     PENDING,

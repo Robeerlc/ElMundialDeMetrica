@@ -1,5 +1,6 @@
-package com.metrica.porramundial.domain;
+package com.metrica.porramundial.domain.entity;
 
+import com.metrica.porramundial.domain.enums.Country;
 import jakarta.persistence.*;
 import lombok.*;
 import org.springframework.security.core.GrantedAuthority;
@@ -51,15 +52,9 @@ public class User implements UserDetails {
     @Column(nullable = false)
     private Country country;
 
-    @Enumerated(EnumType.STRING)
-    @Column(nullable = false)
-    private Department department;
-
     @Column(nullable = false)
     @Builder.Default
-    private Boolean isAccountActive = false;
-
-    private String activationToken;
+    private Boolean requirePasswordChange = true;
 
     @Override
     public Collection<? extends GrantedAuthority> getAuthorities() {
@@ -71,8 +66,4 @@ public class User implements UserDetails {
         return this.email;
     }
 
-    @Override
-    public boolean isEnabled() {
-        return this.isAccountActive;
-    }
 }

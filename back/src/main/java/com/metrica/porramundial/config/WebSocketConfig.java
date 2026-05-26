@@ -1,6 +1,6 @@
 package com.metrica.porramundial.config;
 
-import com.metrica.porramundial.security.JwtService;
+import com.metrica.porramundial.config.security.JwtService;
 import org.jspecify.annotations.NonNull;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.messaging.Message;
@@ -17,7 +17,6 @@ import org.springframework.web.socket.config.annotation.StompEndpointRegistry;
 import org.springframework.web.socket.config.annotation.WebSocketMessageBrokerConfigurer;
 
 import java.util.List;
-import java.util.Objects;
 
 @Configuration
 @EnableWebSocketMessageBroker
@@ -32,7 +31,7 @@ public class WebSocketConfig implements WebSocketMessageBrokerConfigurer {
     @Override
     public void registerStompEndpoints(StompEndpointRegistry registry) {
         registry.addEndpoint("/ws-chat")
-                .setAllowedOrigins("http://localhost:4200", "null")
+                .setAllowedOrigins("http://localhost:4200")
                 .withSockJS();
     }
 
@@ -48,21 +47,27 @@ public class WebSocketConfig implements WebSocketMessageBrokerConfigurer {
             @Override
             public Message<?> preSend(@NonNull Message<?> message, @NonNull MessageChannel channel) {
                 StompHeaderAccessor accessor = MessageHeaderAccessor.getAccessor(message, StompHeaderAccessor.class);
-                if (StompCommand.CONNECT.equals(Objects.requireNonNull(accessor).getCommand())) {
+                if (accessor != null && StompCommand.CONNECT.equals(accessor.getCommand())) {
                     List<String> authorization = accessor.getNativeHeader("Authorization");
-
                     if (authorization != null && !authorization.isEmpty()) {
-                        String token = authorization.getFirst().substring(7);
-
-                        try {
-                            String email = jwtService.extractUsername(token);
-
-                            UsernamePasswordAuthenticationToken auth = new UsernamePasswordAuthenticationToken(email, null, List.of());
-                            accessor.setUser(auth);
-
-                        } catch (Exception e) {
-                            System.err.println("Token inválido en WebSocket: " + e.getMessage());
+                        String tokenHeader = authorization.getFirst();
+                        if (tokenHeader != null && tokenHeader.startsWith("Bearer ")) {
+                            String token = tokenHeader.substring(7);
+                            try {
+                                String email = jwtService.extractUsername(token);
+                                UsernamePasswordAuthenticationToken auth = new UsernamePasswordAuthenticationToken(email, null, List.of());
+                                accessor.setUser(auth);
+                            } catch (Exception e) {
+                                System.err.println("Token JWT inválido en WebSocket: " + e.getMessage());
+                                throw new IllegalArgumentException("Token inválido o expirado");
+                            }
+                        } else {
+                            System.err.println("Formato de token incorrecto en WebSocket");
+                            throw new IllegalArgumentException("El token debe empezar por Bearer");
                         }
+                    } else {
+                        System.err.println("Intento de conexión al WebSocket sin cabecera Authorization");
+                        throw new IllegalArgumentException("Acceso denegado: Cabecera Authorization requerida");
                     }
                 }
                 return message;

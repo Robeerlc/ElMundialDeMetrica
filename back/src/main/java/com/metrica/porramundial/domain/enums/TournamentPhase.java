@@ -1,4 +1,4 @@
-package com.metrica.porramundial.domain;
+package com.metrica.porramundial.domain.enums;
 
 import lombok.Getter;
 

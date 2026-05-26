@@ -1,7 +1,8 @@
-package com.metrica.porramundial.domain;
+package com.metrica.porramundial.domain.entity;
 
 import jakarta.persistence.*;
 import lombok.*;
+
 import java.util.ArrayList;
 import java.util.List;
 
@@ -30,11 +31,6 @@ public class PredictionHistory {
     @Builder.Default
     private Integer totalPoints = 0;
 
-    public void addPrediction(Prediction prediction) {
-        predictions.add(prediction);
-        totalPoints += prediction.getPointsEarned();
-    }
-    
     public void recalculate() {
         this.totalPoints = predictions.stream()
                 .mapToInt(p -> p.getPointsEarned() != null ? p.getPointsEarned() : 0)

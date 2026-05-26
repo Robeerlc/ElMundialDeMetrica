@@ -1,6 +1,6 @@
 package com.metrica.porramundial.repository;
 
-import com.metrica.porramundial.domain.User;
+import com.metrica.porramundial.domain.entity.User;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 
@@ -9,5 +9,4 @@ import java.util.Optional;
 @Repository
 public interface UserRepository extends JpaRepository<User, Long> {
     Optional<User> findByEmail(String email);
-    Optional<User> findByActivationToken(String activationToken);
 }

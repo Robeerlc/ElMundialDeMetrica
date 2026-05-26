@@ -1,18 +1,16 @@
 package com.metrica.porramundial.service;
 
-import com.metrica.porramundial.domain.User;
-import com.metrica.porramundial.dto.AuthResponse;
-import com.metrica.porramundial.dto.LoginRequest;
-import com.metrica.porramundial.dto.RegisterRequest;
+import com.metrica.porramundial.domain.entity.User;
+import com.metrica.porramundial.dto.auth.AuthResponse;
+import com.metrica.porramundial.dto.auth.ChangePasswordRequest;
+import com.metrica.porramundial.dto.auth.LoginRequest;
 import com.metrica.porramundial.repository.UserRepository;
-import com.metrica.porramundial.security.JwtService;
+import com.metrica.porramundial.config.security.JwtService;
 import jakarta.transaction.Transactional;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
-
-import java.util.UUID;
 
 @Service
 public class AuthService {
@@ -21,52 +19,28 @@ public class AuthService {
     private final PasswordEncoder passwordEncoder;
     private final JwtService jwtService;
     private final AuthenticationManager authenticationManager;
-    private final EmailService emailService;
 
-    public AuthService(UserRepository userRepository, PasswordEncoder passwordEncoder, JwtService jwtService, AuthenticationManager authenticationManager, EmailService emailService) {
+    public AuthService(UserRepository userRepository, PasswordEncoder passwordEncoder, JwtService jwtService, AuthenticationManager authenticationManager) {
         this.userRepository = userRepository;
         this.passwordEncoder = passwordEncoder;
         this.jwtService = jwtService;
         this.authenticationManager = authenticationManager;
-        this.emailService = emailService;
-    }
-
-    @Transactional
-    public AuthResponse register(RegisterRequest request) {
-        if (!request.email().endsWith("@metrica-global.com"))
-            throw new IllegalArgumentException("Solo se permiten correos corporativos (@metrica-global.com).");
-
-        if (userRepository.findByEmail(request.email()).isPresent())
-            throw new IllegalArgumentException("El correo ya está registrado.");
-
-        String activationToken = UUID.randomUUID().toString();
-        User newUser = User.builder()
-                .email(request.email())
-                .fullName(request.fullName())
-                .password(passwordEncoder.encode(request.password()))
-                .country(request.country())
-                .department(request.department())
-                .isAccountActive(false)
-                .activationToken(activationToken).build();
-        userRepository.save(newUser);
-        emailService.sendActivationEmail(newUser.getEmail(), activationToken);
-        return new AuthResponse(null, "Registro exitoso. Revisa tu bandeja de entrada para activar la cuenta.");
-    }
-
-    @Transactional
-    public String activateAccount(String token) {
-        User user = userRepository.findByActivationToken(token)
-                .orElseThrow(() -> new IllegalArgumentException("Token de activación inválido o expirado."));
-        user.setIsAccountActive(true);
-        user.setActivationToken(null);
-        userRepository.save(user);
-        return "¡Cuenta activada correctamente! Ya puedes iniciar sesión.";
     }
 
     public AuthResponse login(LoginRequest request) {
         authenticationManager.authenticate(new UsernamePasswordAuthenticationToken(request.email(), request.password()));
-        User user = userRepository.findByEmail(request.email()).orElseThrow();
+        User user = userRepository.findByEmail(request.email()).orElseThrow(() -> new IllegalArgumentException("Usuario no encontrado"));
         String jwtToken = jwtService.generateToken(user);
-        return new AuthResponse(jwtToken, "Inicio de sesión exitoso.");
+        return new AuthResponse(jwtToken, user.getEmail(), user.getRequirePasswordChange());
+    }
+
+    @Transactional
+    public void changePassword(ChangePasswordRequest request, String email) {
+        User user = userRepository.findByEmail(email).orElseThrow(() -> new IllegalArgumentException("Usuario no encontrado"));
+        if (!passwordEncoder.matches(request.currentPassword(), user.getPassword()))
+            throw new IllegalArgumentException("La contraseña actual no es correcta");
+        user.setPassword(passwordEncoder.encode(request.newPassword()));
+        user.setRequirePasswordChange(false);
+        userRepository.save(user);
     }
 }

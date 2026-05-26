@@ -1,9 +1,9 @@
 package com.metrica.porramundial.service;
 
-import com.metrica.porramundial.domain.Match;
-import com.metrica.porramundial.domain.MatchStatus;
+import com.metrica.porramundial.domain.entity.Match;
+import com.metrica.porramundial.domain.enums.MatchStatus;
 import com.metrica.porramundial.dto.FootballDataResponse;
-import com.metrica.porramundial.dto.MatchResultRequest;
+import com.metrica.porramundial.dto.match.MatchResultRequest;
 import com.metrica.porramundial.repository.MatchRepository;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.scheduling.annotation.Scheduled;
@@ -19,7 +19,7 @@ public class LiveMatchUpdaterService {
     private final MatchService matchService;
     private final RestClient restClient;
     private final ScoringService scoringService;
-    
+
     public LiveMatchUpdaterService(
             MatchRepository matchRepository,
             MatchService matchService,
@@ -67,7 +67,7 @@ public class LiveMatchUpdaterService {
                             if (dbMatch.getStatus() == MatchStatus.FINISHED) {
                                 continue;
                             }
-                            
+
                             String winningTeam = null;
                             if (homeGoals > awayGoals) winningTeam = apiHomeTeam;
                             else if (awayGoals > homeGoals) winningTeam = apiAwayTeam;

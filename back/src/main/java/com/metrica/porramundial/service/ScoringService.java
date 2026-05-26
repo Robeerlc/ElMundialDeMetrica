@@ -1,6 +1,9 @@
 package com.metrica.porramundial.service;
 
-import com.metrica.porramundial.domain.*;
+import com.metrica.porramundial.domain.entity.Match;
+import com.metrica.porramundial.domain.entity.Prediction;
+import com.metrica.porramundial.domain.entity.PredictionHistory;
+import com.metrica.porramundial.domain.enums.PredictionResultType;
 import com.metrica.porramundial.repository.PredictionHistoryRepository;
 import com.metrica.porramundial.repository.PredictionRepository;
 import lombok.RequiredArgsConstructor;
@@ -51,8 +54,8 @@ public class ScoringService {
         int realAway = match.getAwayGoals();
 
         boolean correctWinner = Objects.equals(prediction.getWinningTeam(), match.getWinningTeam());
-        boolean correctDiff   = (predHome - predAway) == (realHome - realAway);
-        boolean exactScore    = predHome == realHome && predAway == realAway;
+        boolean correctDiff = (predHome - predAway) == (realHome - realAway);
+        boolean exactScore = predHome == realHome && predAway == realAway;
 
         PredictionResultType resultType;
         if (!correctWinner) {

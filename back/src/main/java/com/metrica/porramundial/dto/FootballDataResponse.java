@@ -4,11 +4,16 @@ import java.util.List;
 
 public record FootballDataResponse(List<MatchData> matches) {
 
-    public record MatchData(String utcDate, String status, String stage, TeamData homeTeam, TeamData awayTeam, ScoreData score) {}
+    public record MatchData(String utcDate, String status, String stage, TeamData homeTeam, TeamData awayTeam,
+                            ScoreData score) {
+    }
 
-    public record TeamData(String shortName) {}
+    public record TeamData(String shortName) {
+    }
 
-    public record ScoreData(TimeData fullTime) {}
+    public record ScoreData(TimeData fullTime) {
+    }
 
-    public record TimeData(Integer home, Integer away) {}
+    public record TimeData(Integer home, Integer away) {
+    }
 }

@@ -1,8 +1,8 @@
 package com.metrica.porramundial.config;
 
-import com.metrica.porramundial.domain.Match;
-import com.metrica.porramundial.domain.MatchStatus;
-import com.metrica.porramundial.domain.TournamentPhase;
+import com.metrica.porramundial.domain.entity.Match;
+import com.metrica.porramundial.domain.enums.MatchStatus;
+import com.metrica.porramundial.domain.enums.TournamentPhase;
 import com.metrica.porramundial.dto.FootballDataResponse;
 import com.metrica.porramundial.repository.MatchRepository;
 import org.jspecify.annotations.NonNull;

@@ -1,4 +1,4 @@
-package com.metrica.porramundial.domain;
+package com.metrica.porramundial.domain.entity;
 
 import jakarta.persistence.*;
 import lombok.*;
@@ -34,5 +34,5 @@ public class Prediction {
     private String winningTeam;
 
     @Enumerated(EnumType.STRING)
-    private PredictionResultType resultType;
+    private com.metrica.porramundial.domain.enums.PredictionResultType resultType;
 }

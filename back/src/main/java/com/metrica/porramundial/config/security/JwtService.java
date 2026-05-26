@@ -1,4 +1,4 @@
-package com.metrica.porramundial.security;
+package com.metrica.porramundial.config.security;
 
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.Jwts;

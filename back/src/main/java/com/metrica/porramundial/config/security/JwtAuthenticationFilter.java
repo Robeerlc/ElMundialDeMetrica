@@ -1,4 +1,4 @@
-package com.metrica.porramundial.security;
+package com.metrica.porramundial.config.security;
 
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
