@@ -57,6 +57,7 @@ public class DataLoader implements CommandLineRunner {
                         TournamentPhase phase = mapPhase(data.stage());
                         if (phase == null) continue;
                         Match match = Match.builder()
+                                .apiMatchId(data.id())
                                 .homeTeam(homeTeam)
                                 .awayTeam(awayTeam)
                                 .startTime(zdt.toLocalDateTime())

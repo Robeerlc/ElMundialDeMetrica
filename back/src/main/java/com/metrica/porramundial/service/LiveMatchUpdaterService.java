@@ -53,7 +53,7 @@ public class LiveMatchUpdaterService {
                 String apiAwayTeam = liveFixture.awayTeam().shortName();
 
                 for (Match dbMatch : liveMatches) {
-                    if (dbMatch.getHomeTeam().equalsIgnoreCase(apiHomeTeam) && dbMatch.getAwayTeam().equalsIgnoreCase(apiAwayTeam)) {
+                    if (dbMatch.getApiMatchId() != null && dbMatch.getApiMatchId().equals(liveFixture.id())) {
 
                         int homeGoals = 0;
                         int awayGoals = 0;
@@ -64,13 +64,12 @@ public class LiveMatchUpdaterService {
                         }
 
                         if ("FINISHED".equals(liveFixture.status())) {
-                            if (dbMatch.getStatus() == MatchStatus.FINISHED) {
-                                continue;
-                            }
+                            if (dbMatch.getStatus() == MatchStatus.FINISHED) continue;
                             
                             String winningTeam = null;
                             if (homeGoals > awayGoals) winningTeam = apiHomeTeam;
                             else if (awayGoals > homeGoals) winningTeam = apiAwayTeam;
+
                             dbMatch.setHomeGoals(homeGoals);
                             dbMatch.setAwayGoals(awayGoals);
                             dbMatch.setWinningTeam(winningTeam);
