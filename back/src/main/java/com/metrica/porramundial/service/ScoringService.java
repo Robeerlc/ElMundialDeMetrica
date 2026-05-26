@@ -3,6 +3,7 @@ package com.metrica.porramundial.service;
 import com.metrica.porramundial.domain.*;
 import com.metrica.porramundial.repository.PredictionHistoryRepository;
 import com.metrica.porramundial.repository.PredictionRepository;
+import com.metrica.porramundial.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -16,6 +17,7 @@ public class ScoringService {
 
     private final PredictionRepository predictionRepository;
     private final PredictionHistoryRepository predictionHistoryRepository;
+    private final UserRepository userRepository;
 
     @Transactional
     public void scoreMatch(Match match) {
@@ -28,6 +30,19 @@ public class ScoringService {
         for (Prediction prediction : predictions) {
             score(prediction, match);
             predictionRepository.save(prediction);
+
+            User user = prediction.getUser();
+            user.setTotalPoints(user.getTotalPoints() + prediction.getPointsEarned());
+
+            if (prediction.getResultType() != null) {
+                switch (prediction.getResultType()) {
+                    case EXACT_MATCH -> user.setExactMatchesCount(user.getExactMatchesCount() + 1);
+                    case GOAL_DIFFERENCE -> user.setGoalDiffMatchesCount(user.getGoalDiffMatchesCount() + 1);
+                    case WINNER -> user.setWinnerMatchesCount(user.getWinnerMatchesCount() + 1);
+                    default -> {}
+                }
+            }
+            userRepository.save(user);
 
             PredictionHistory history = predictionHistoryRepository
                     .findByUser(prediction.getUser())
