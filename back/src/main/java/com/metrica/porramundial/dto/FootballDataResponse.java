@@ -4,7 +4,7 @@ import java.util.List;
 
 public record FootballDataResponse(List<MatchData> matches) {
 
-    public record MatchData(String utcDate, String status, String stage, TeamData homeTeam, TeamData awayTeam,
+    public record MatchData(Long id, String utcDate, String status, String stage, TeamData homeTeam, TeamData awayTeam,
                             ScoreData score) {
     }
 

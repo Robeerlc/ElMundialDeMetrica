@@ -1,6 +1,6 @@
 package com.metrica.porramundial.service;
 
-import com.metrica.porramundial.domain.User;
+import com.metrica.porramundial.domain.entity.User;
 import com.metrica.porramundial.dto.LeaderboardResponse;
 import com.metrica.porramundial.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
@@ -23,7 +23,6 @@ public class LeaderboardService {
                     return new LeaderboardResponse(
                             index + 1,
                             user.getFullName(),
-                            user.getDepartment().name(),
                             user.getTotalPoints(),
                             user.getExactMatchesCount(),
                             user.getGoalDiffMatchesCount(),

@@ -3,6 +3,7 @@ package com.metrica.porramundial.service;
 import com.metrica.porramundial.domain.entity.Match;
 import com.metrica.porramundial.domain.entity.Prediction;
 import com.metrica.porramundial.domain.entity.PredictionHistory;
+import com.metrica.porramundial.domain.entity.User;
 import com.metrica.porramundial.domain.enums.PredictionResultType;
 import com.metrica.porramundial.repository.PredictionHistoryRepository;
 import com.metrica.porramundial.repository.PredictionRepository;
