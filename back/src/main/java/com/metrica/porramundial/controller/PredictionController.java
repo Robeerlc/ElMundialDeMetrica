@@ -33,10 +33,11 @@ public class PredictionController {
     public ResponseEntity<PredictionResponse> getPredictionById(@PathVariable Long id) {
         return ResponseEntity.of(this.predictionService.getPredictionById(id));
     }
-    
-    @GetMapping("/user/{userId}")
-    public ResponseEntity<List<PredictionResponse>> getPredictionsByUser(@PathVariable Long userId) {
-        return ResponseEntity.ok(this.predictionService.getPredictionsByUser(userId));
+
+    @GetMapping("/me")
+    public ResponseEntity<List<PredictionResponse>> getMyPredictions(Authentication authentication) {
+        String username = authentication.getName();
+        return ResponseEntity.ok(this.predictionService.getPredictionsByUsername(username));
     }
     
     @PostMapping
