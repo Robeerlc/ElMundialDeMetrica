@@ -38,22 +38,15 @@ public class PredictionService {
     
     public Optional<PredictionResponse> getPredictionById(Long id) {
         Optional<Prediction> prediction = this.predictionRepository.findById(id);
-        
-        if (prediction.isEmpty()) {
-            return Optional.empty();
-        }
-        return Optional.of(PredictionResponse.of(prediction.get()));
+        return prediction.map(PredictionResponse::of);
     }
 
-    public List<PredictionResponse> getPredictionsByUser(Long userId) {
-        Optional<User> user = this.userRepository.findById(userId);
-        if (user.isEmpty()) {
-            return List.of();
-        }
-        return this.predictionRepository.findByUser(user.get())
+    public List<PredictionResponse> getPredictionsByUsername(String username) {
+        Optional<User> user = this.userRepository.findByEmail(username);
+        return user.map(value -> this.predictionRepository.findByUser(value)
                 .stream()
                 .map(PredictionResponse::of)
-                .toList();
+                .toList()).orElseGet(List::of);
     }
     
     @Transactional
