@@ -22,7 +22,7 @@ public class LeaderboardController {
     public ResponseEntity<List<LeaderboardResponse>> getLeaderboard() {
         return ResponseEntity.ok(leaderboardService.getLeaderboard());
     }
-    
+
     @GetMapping("/me")
     public ResponseEntity<LeaderboardResponse> getMyLeaderboard(Authentication authentication) {
         String email = authentication.getName();

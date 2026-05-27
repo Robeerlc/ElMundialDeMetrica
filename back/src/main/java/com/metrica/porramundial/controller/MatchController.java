@@ -5,6 +5,7 @@ import com.metrica.porramundial.domain.enums.TournamentPhase;
 import com.metrica.porramundial.dto.match.MatchCreateRequest;
 import com.metrica.porramundial.dto.match.MatchResultRequest;
 import com.metrica.porramundial.service.MatchService;
+import jakarta.validation.Valid;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -21,7 +22,7 @@ public class MatchController {
     }
 
     @PostMapping
-    public ResponseEntity<Match> createMatch(@RequestBody MatchCreateRequest request) {
+    public ResponseEntity<Match> createMatch(@Valid @RequestBody MatchCreateRequest request) {
         return ResponseEntity.ok(matchService.createMatch(request));
     }
 
@@ -36,7 +37,7 @@ public class MatchController {
     }
 
     @PutMapping("/{id}/result")
-    public ResponseEntity<Void> updateMatchResult(@PathVariable Long id, @RequestBody MatchResultRequest request) {
+    public ResponseEntity<Void> updateMatchResult(@PathVariable Long id, @Valid @RequestBody MatchResultRequest request) {
         matchService.updateMatchResult(id, request);
         return ResponseEntity.ok().build();
     }

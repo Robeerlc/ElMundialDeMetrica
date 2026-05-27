@@ -3,6 +3,7 @@ package com.metrica.porramundial.controller;
 import com.metrica.porramundial.domain.entity.ChatMessage;
 import com.metrica.porramundial.dto.chat.ChatInputRequest;
 import com.metrica.porramundial.repository.ChatMessageRepository;
+import jakarta.validation.Valid;
 import org.springframework.messaging.handler.annotation.MessageMapping;
 import org.springframework.messaging.handler.annotation.SendTo;
 import org.springframework.security.core.Authentication;
@@ -24,9 +25,8 @@ public class ChatController {
 
     @MessageMapping("/chat.send")
     @SendTo("/topic/global")
-    public ChatMessage broadcastMessage(ChatInputRequest request, Authentication authentication) {
+    public ChatMessage broadcastMessage(@Valid ChatInputRequest request, Authentication authentication) {
         String username = authentication != null ? authentication.getName() : "Anónimo";
-
         ChatMessage chatMessage = ChatMessage.builder()
                 .username(username.split("@")[0])
                 .message(request.message())

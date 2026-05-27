@@ -43,7 +43,8 @@ public class ScoringService {
                     case EXACT_MATCH -> user.setExactMatchesCount(user.getExactMatchesCount() + 1);
                     case GOAL_DIFFERENCE -> user.setGoalDiffMatchesCount(user.getGoalDiffMatchesCount() + 1);
                     case WINNER -> user.setWinnerMatchesCount(user.getWinnerMatchesCount() + 1);
-                    default -> {}
+                    default -> {
+                    }
                 }
             }
             userRepository.save(user);

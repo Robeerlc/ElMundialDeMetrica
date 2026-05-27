@@ -4,6 +4,7 @@ import com.metrica.porramundial.dto.predictions.PredictionCreationRequest;
 import com.metrica.porramundial.dto.predictions.PredictionDataType;
 import com.metrica.porramundial.dto.predictions.PredictionResponse;
 import com.metrica.porramundial.service.PredictionService;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
@@ -34,7 +35,7 @@ public class PredictionController {
     }
 
     @PostMapping
-    public ResponseEntity<?> createPrediction(@RequestBody PredictionCreationRequest pcr, Authentication authentication) {
+    public ResponseEntity<?> createPrediction(@Valid @RequestBody PredictionCreationRequest pcr, Authentication authentication) {
         return PredictionDataType.response(this.predictionService.createPrediction(pcr, authentication));
     }
 }
