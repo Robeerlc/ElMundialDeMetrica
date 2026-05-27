@@ -1,4 +1,6 @@
 package com.metrica.porramundial.dto.auth;
 
-public record ChangePasswordRequest(String currentPassword, String newPassword) {
+import com.metrica.porramundial.domain.enums.Country;
+
+public record ChangePasswordRequest(String currentPassword, String newPassword, String fullName, Country country) {
 }

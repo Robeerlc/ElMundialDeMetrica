@@ -1,11 +1,11 @@
 package com.metrica.porramundial.service;
 
+import com.metrica.porramundial.config.security.JwtService;
 import com.metrica.porramundial.domain.entity.User;
 import com.metrica.porramundial.dto.auth.AuthResponse;
 import com.metrica.porramundial.dto.auth.ChangePasswordRequest;
 import com.metrica.porramundial.dto.auth.LoginRequest;
 import com.metrica.porramundial.repository.UserRepository;
-import com.metrica.porramundial.config.security.JwtService;
 import jakarta.transaction.Transactional;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
@@ -39,7 +39,15 @@ public class AuthService {
         User user = userRepository.findByEmail(email).orElseThrow(() -> new IllegalArgumentException("Usuario no encontrado"));
         if (!passwordEncoder.matches(request.currentPassword(), user.getPassword()))
             throw new IllegalArgumentException("La contraseña actual no es correcta");
+
+        if (request.fullName() == null || request.fullName().isBlank())
+            throw new IllegalArgumentException("El nombre es obligatorio");
+        if (request.country() == null)
+            throw new IllegalArgumentException("El país es obligatorio");
+
         user.setPassword(passwordEncoder.encode(request.newPassword()));
+        user.setFullName(request.fullName());
+        user.setCountry(request.country());
         user.setRequirePasswordChange(false);
         userRepository.save(user);
     }

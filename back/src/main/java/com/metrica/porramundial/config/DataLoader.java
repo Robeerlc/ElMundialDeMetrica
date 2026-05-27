@@ -1,16 +1,23 @@
 package com.metrica.porramundial.config;
 
 import com.metrica.porramundial.domain.entity.Match;
+import com.metrica.porramundial.domain.entity.User;
 import com.metrica.porramundial.domain.enums.MatchStatus;
 import com.metrica.porramundial.domain.enums.TournamentPhase;
 import com.metrica.porramundial.dto.FootballDataResponse;
 import com.metrica.porramundial.repository.MatchRepository;
+import com.metrica.porramundial.repository.UserRepository;
 import org.jspecify.annotations.NonNull;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.CommandLineRunner;
+import org.springframework.core.io.ClassPathResource;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Component;
 import org.springframework.web.client.RestClient;
 
+import java.io.BufferedReader;
+import java.io.InputStreamReader;
+import java.nio.charset.StandardCharsets;
 import java.time.ZonedDateTime;
 import java.util.ArrayList;
 import java.util.List;
@@ -20,13 +27,19 @@ public class DataLoader implements CommandLineRunner {
 
     private final MatchRepository matchRepository;
     private final RestClient restClient;
+    private final UserRepository userRepository;
+    private final PasswordEncoder passwordEncoder;
 
     public DataLoader(
             MatchRepository matchRepository,
             @Value("${api.footballdata.url}") String apiUrl,
-            @Value("${api.footballdata.key}") String apiKey) {
+            @Value("${api.footballdata.key}") String apiKey,
+            UserRepository userRepository,
+            PasswordEncoder passwordEncoder) {
 
         this.matchRepository = matchRepository;
+        this.userRepository = userRepository;
+        this.passwordEncoder = passwordEncoder;
         this.restClient = RestClient.builder()
                 .baseUrl(apiUrl)
                 .defaultHeader("X-Auth-Token", apiKey)
@@ -35,6 +48,7 @@ public class DataLoader implements CommandLineRunner {
 
     @Override
     public void run(String @NonNull ... args) {
+        cargarUsuariosVIP();
         if (matchRepository.count() == 0) {
             System.out.println("Conectando a Football-Data.org...");
             try {
@@ -87,5 +101,45 @@ public class DataLoader implements CommandLineRunner {
             case "FINAL" -> TournamentPhase.FINAL;
             default -> null;
         };
+    }
+
+    private void cargarUsuariosVIP() {
+        List<String> bloqueCsv = new ArrayList<>();
+        bloqueCsv.add("Email,Contraseña_Temporal");
+        try (BufferedReader br = new java.io.BufferedReader(new InputStreamReader(
+                new ClassPathResource("usuarios.csv").getInputStream(), StandardCharsets.UTF_8))) {
+            String linea;
+            boolean esCabecera = true;
+            while ((linea = br.readLine()) != null) {
+                if (esCabecera) {
+                    esCabecera = false;
+                    continue;
+                }
+                String email = linea.trim();
+                if (!email.isEmpty()) {
+                    String passwordPlana = generarPasswordAleatoria();
+                    bloqueCsv.add(email + "," + passwordPlana);
+                    User user = com.metrica.porramundial.domain.entity.User.builder()
+                            .email(email)
+                            .password(passwordEncoder.encode(passwordPlana))
+                            .requirePasswordChange(true)
+                            .build();
+                    userRepository.save(user);
+                }
+            }
+            for (String fila : bloqueCsv) System.out.println(fila);
+        } catch (Exception e) {
+            System.err.println("Error al cargar el archivo CSV: " + e.getMessage());
+        }
+    }
+
+    private String generarPasswordAleatoria() {
+        String caracteres = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789!@#$";
+        java.security.SecureRandom random = new java.security.SecureRandom();
+        StringBuilder sb = new StringBuilder(10);
+        for (int i = 0; i < 10; i++) {
+            sb.append(caracteres.charAt(random.nextInt(caracteres.length())));
+        }
+        return sb.toString();
     }
 }
