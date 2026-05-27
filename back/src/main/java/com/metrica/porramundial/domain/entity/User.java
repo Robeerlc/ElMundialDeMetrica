@@ -52,9 +52,12 @@ public class User implements UserDetails {
     @Column(nullable = false)
     private Country country;
 
+    @Column(unique = true)
+    private String activationToken;
+
     @Column(nullable = false)
     @Builder.Default
-    private Boolean requirePasswordChange = true;
+    private Boolean enabled = false;
 
     @Override
     public Collection<? extends GrantedAuthority> getAuthorities() {
@@ -66,4 +69,8 @@ public class User implements UserDetails {
         return this.email;
     }
 
+    @Override
+    public boolean isEnabled() {
+        return this.enabled;
+    }
 }
