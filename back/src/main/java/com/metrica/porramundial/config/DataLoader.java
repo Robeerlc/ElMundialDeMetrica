@@ -72,7 +72,7 @@ public class DataLoader implements CommandLineRunner {
                             .startTime(zdt.toLocalDateTime())
                             .phase(phase)
                             .status(status)
-                            .isLocked(status == MatchStatus.FINISHED || status == MatchStatus.IN_PROGRESS) // Bloquea si ya empezó
+                            .isLocked(status == MatchStatus.FINISHED || status == MatchStatus.IN_PROGRESS)
                             .build();
 
                     matchesToSave.add(match);
