@@ -34,45 +34,69 @@ public class DataLoader implements CommandLineRunner {
 
     @Override
     public void run(String @NonNull ... args) {
-        if (matchRepository.count() == 0) {
-            System.out.println("Conectando a Football-Data.org...");
-            try {
-                FootballDataResponse apiResponse = restClient.get()
-                        .uri("/competitions/WC/matches")
-                        .retrieve()
-                        .body(FootballDataResponse.class);
+        System.out.println("Arrancando inyector de partidos...");
+        fetchAndSaveMatches("WC", false);
+        fetchAndSaveMatches("CL", true);
+    }
 
-                if (apiResponse != null && apiResponse.matches() != null) {
-                    List<Match> matchesToSave = new ArrayList<>();
+    private void fetchAndSaveMatches(String competitionCode, boolean onlyFinal) {
+        System.out.println("Buscando partidos para la competición: " + competitionCode + "...");
+        try {
+            FootballDataResponse apiResponse = restClient.get()
+                    .uri("/competitions/" + competitionCode + "/matches")
+                    .retrieve()
+                    .body(FootballDataResponse.class);
 
-                    for (FootballDataResponse.MatchData data : apiResponse.matches()) {
-                        if (data.homeTeam() == null || data.awayTeam() == null ||
-                                data.homeTeam().shortName() == null || data.awayTeam().shortName() == null) continue;
+            if (apiResponse != null && apiResponse.matches() != null) {
+                List<Match> matchesToSave = new ArrayList<>();
 
-                        String homeTeam = data.homeTeam().shortName();
-                        String awayTeam = data.awayTeam().shortName();
+                for (FootballDataResponse.MatchData data : apiResponse.matches()) {
 
-                        ZonedDateTime zdt = ZonedDateTime.parse(data.utcDate());
-                        TournamentPhase phase = mapPhase(data.stage());
-                        if (phase == null) continue;
-                        Match match = Match.builder()
-                                .apiMatchId(data.id())
-                                .homeTeam(homeTeam)
-                                .awayTeam(awayTeam)
-                                .startTime(zdt.toLocalDateTime())
-                                .phase(phase)
-                                .status(MatchStatus.PENDING)
-                                .isLocked(false)
-                                .build();
-                        matchesToSave.add(match);
-                    }
-                    matchRepository.saveAll(matchesToSave);
-                    System.out.println("DataLoader: " + matchesToSave.size() + " partidos inyectados con éxito");
+                    if (onlyFinal && !"FINAL".equalsIgnoreCase(data.stage())) continue;
+                    if (matchRepository.existsByApiMatchId(data.id())) continue;
+                    if (data.homeTeam() == null || data.awayTeam() == null ||
+                            data.homeTeam().shortName() == null || data.awayTeam().shortName() == null) continue;
+
+                    String homeTeam = data.homeTeam().shortName();
+                    String awayTeam = data.awayTeam().shortName();
+
+                    ZonedDateTime zdt = ZonedDateTime.parse(data.utcDate());
+                    TournamentPhase phase = mapPhase(data.stage());
+                    if (phase == null) continue;
+
+                    MatchStatus status = mapStatus(data.status());
+                    Match match = Match.builder()
+                            .apiMatchId(data.id())
+                            .homeTeam(homeTeam)
+                            .awayTeam(awayTeam)
+                            .startTime(zdt.toLocalDateTime())
+                            .phase(phase)
+                            .status(status)
+                            .isLocked(status == MatchStatus.FINISHED || status == MatchStatus.IN_PROGRESS) // Bloquea si ya empezó
+                            .build();
+
+                    matchesToSave.add(match);
                 }
-            } catch (Exception e) {
-                System.err.println("Error con Football-Data: " + e.getMessage());
+
+                if (!matchesToSave.isEmpty()) {
+                    matchRepository.saveAll(matchesToSave);
+                    System.out.println(matchesToSave.size() + " NUEVOS partidos inyectados para " + competitionCode);
+                } else {
+                    System.out.println("Todos los partidos de " + competitionCode + " requeridos ya estaban en la BD.");
+                }
             }
+        } catch (Exception e) {
+            System.err.println("Error con Football-Data (" + competitionCode + "): " + e.getMessage());
         }
+    }
+
+    private MatchStatus mapStatus(String apiStatus) {
+        if (apiStatus == null) return MatchStatus.PENDING;
+        return switch (apiStatus) {
+            case "FINISHED", "AWARDED" -> MatchStatus.FINISHED;
+            case "IN_PLAY", "PAUSED" -> MatchStatus.IN_PROGRESS;
+            default -> MatchStatus.PENDING;
+        };
     }
 
     private TournamentPhase mapPhase(String apiRound) {

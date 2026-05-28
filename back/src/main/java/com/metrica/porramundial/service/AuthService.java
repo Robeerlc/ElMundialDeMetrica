@@ -6,9 +6,10 @@ import com.metrica.porramundial.dto.auth.AuthResponse;
 import com.metrica.porramundial.dto.auth.LoginRequest;
 import com.metrica.porramundial.dto.auth.RegisterRequest;
 import com.metrica.porramundial.repository.UserRepository;
+import jakarta.mail.internet.MimeMessage;
 import jakarta.transaction.Transactional;
-import org.springframework.mail.SimpleMailMessage;
 import org.springframework.mail.javamail.JavaMailSender;
+import org.springframework.mail.javamail.MimeMessageHelper;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -70,15 +71,20 @@ public class AuthService {
     private void enviarCorreoActivacion(String emailDestino, String token) {
         try {
             String urlActivacion = "http://localhost:8080/api/auth/activate?token=" + token;
-            SimpleMailMessage mensaje = new SimpleMailMessage();
-            mensaje.setFrom("noreplay-porra@metrica-global.com");
-            mensaje.setTo(emailDestino);
-            mensaje.setSubject("⚽ ¡Verifica tu cuenta en El Mundial de METRICA!");
-            mensaje.setText("¡Hola!\n\n" +
-                    "Gracias por registrarte en la plataforma oficial de la porra de METRICA.\n\n" +
-                    "Para activar tu cuenta y poder iniciar sesión, solo tienes que hacer clic en el siguiente enlace:\n" +
-                    "👉 " + urlActivacion + "\n\n" +
-                    "¡Mucha suerte en tus pronósticos! 🏆");
+            MimeMessage mensaje = mailSender.createMimeMessage();
+            MimeMessageHelper helper = new MimeMessageHelper(mensaje, true, "UTF-8");
+
+            helper.setFrom("noreplay-porra@metrica-global.com");
+            helper.setTo(emailDestino);
+            helper.setSubject("⚽ ¡Verifica tu cuenta en El Mundial de METRICA!");
+
+            String contenidoHtml = "<p>¡Hola!</p>"
+                    + "<p>Gracias por registrarte en la plataforma oficial de METRICA para la <strong>Copa Mundial de la FIFA 2026</strong>.</p>"
+                    + "<p>Para activar tu cuenta y poder iniciar sesión, solo tienes que hacer clic en el siguiente enlace:</p>"
+                    + "<p>👉 <a href=\"" + urlActivacion + "\" style=\"color: #0056b3; font-weight: bold; text-decoration: none;\">¡Activa tu cuenta y participa ya!</a></p>"
+                    + "<p>¡Mucha suerte en tus pronósticos! 🏆</p>";
+            helper.setText(contenidoHtml, true);
+
             mailSender.send(mensaje);
         } catch (Exception e) {
             System.err.println("Error al enviar correo de activación a " + emailDestino + ": " + e.getMessage());

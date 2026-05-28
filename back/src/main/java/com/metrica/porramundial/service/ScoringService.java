@@ -7,7 +7,6 @@ import com.metrica.porramundial.domain.entity.User;
 import com.metrica.porramundial.domain.enums.PredictionResultType;
 import com.metrica.porramundial.repository.PredictionHistoryRepository;
 import com.metrica.porramundial.repository.PredictionRepository;
-import com.metrica.porramundial.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -21,7 +20,6 @@ public class ScoringService {
 
     private final PredictionRepository predictionRepository;
     private final PredictionHistoryRepository predictionHistoryRepository;
-    private final UserRepository userRepository;
 
     @Transactional
     public void scoreMatch(Match match) {
@@ -33,7 +31,6 @@ public class ScoringService {
 
         for (Prediction prediction : predictions) {
             score(prediction, match);
-            predictionRepository.save(prediction);
 
             User user = prediction.getUser();
             user.setTotalPoints(user.getTotalPoints() + prediction.getPointsEarned());
@@ -47,20 +44,18 @@ public class ScoringService {
                     }
                 }
             }
-            userRepository.save(user);
 
             PredictionHistory history = predictionHistoryRepository
-                    .findByUser(prediction.getUser())
-                    .orElseGet(() -> PredictionHistory.builder()
-                            .user(prediction.getUser())
-                            .build());
+                    .findByUser(user)
+                    .orElseGet(() -> {
+                        PredictionHistory newHistory = PredictionHistory.builder().user(user).build();
+                        return predictionHistoryRepository.save(newHistory);
+                    });
 
             if (!history.getPredictions().contains(prediction)) {
                 history.getPredictions().add(prediction);
             }
-
             history.recalculate();
-            predictionHistoryRepository.save(history);
         }
     }
 

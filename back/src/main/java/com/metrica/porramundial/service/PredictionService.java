@@ -4,6 +4,7 @@ import com.metrica.porramundial.domain.entity.Match;
 import com.metrica.porramundial.domain.entity.Prediction;
 import com.metrica.porramundial.domain.entity.PredictionHistory;
 import com.metrica.porramundial.domain.entity.User;
+import com.metrica.porramundial.domain.enums.TournamentPhase;
 import com.metrica.porramundial.dto.predictions.PredictionCreationRequest;
 import com.metrica.porramundial.dto.predictions.PredictionDataType;
 import com.metrica.porramundial.dto.predictions.PredictionResponse;
@@ -64,6 +65,14 @@ public class PredictionService {
         User user = userOp.get();
         Match match = matchOp.get();
 
+        Match firstMatchOfPhase = matchRepository.findFirstByPhaseOrderByStartTimeAsc(match.getPhase())
+                .orElseThrow(() -> new IllegalStateException("No se encontraron partidos para la fase: " + match.getPhase()));
+        java.time.LocalDateTime phaseLockTime = firstMatchOfPhase.getStartTime().minusHours(24);
+
+        if (java.time.LocalDateTime.now(java.time.ZoneOffset.UTC).isAfter(phaseLockTime)) {
+            return new PredictionDataType.Fail("¡Demasiado tarde! Las apuestas para la fase de " + match.getPhase() + " se cerraron 24 horas antes de su primer partido.");
+        }
+
         if (match.getIsLocked()) {
             return new PredictionDataType.Fail("Match is locked!");
         }
@@ -72,21 +81,34 @@ public class PredictionService {
             return new PredictionDataType.Fail("Already made a prediction");
         }
 
+        boolean isDraw = pcr.homeGoals().equals(pcr.awayGoals());
+        if (isDraw && match.getPhase() != TournamentPhase.GROUP_STAGE) {
+            if (pcr.winningTeam() == null || pcr.winningTeam().isBlank()) {
+                return new PredictionDataType.Fail("En eliminatorias, si predices un empate, debes elegir quién ganará por penaltis.");
+            }
+            if (!pcr.winningTeam().equalsIgnoreCase(match.getHomeTeam()) &&
+                    !pcr.winningTeam().equalsIgnoreCase(match.getAwayTeam())) {
+                return new PredictionDataType.Fail("El ganador debe ser obligatoriamente " + match.getHomeTeam() + " o " + match.getAwayTeam());
+            }
+        }
+
         Prediction prediction = Prediction.builder()
                 .user(user)
                 .match(match)
                 .awayGoals(pcr.awayGoals())
                 .homeGoals(pcr.homeGoals())
-                .isDraw(pcr.homeGoals().equals(pcr.awayGoals()))
+                .isDraw(isDraw)
                 .winningTeam(pcr.winningTeam())
                 .build();
 
-        if (!pcr.isDraw()) {
+        if (!isDraw) {
             prediction.setWinningTeam(
                     pcr.homeGoals() > pcr.awayGoals()
                             ? match.getHomeTeam()
                             : match.getAwayTeam()
             );
+        } else if (match.getPhase() == TournamentPhase.GROUP_STAGE) {
+            prediction.setWinningTeam(null);
         }
 
         this.predictionRepository.save(prediction);
