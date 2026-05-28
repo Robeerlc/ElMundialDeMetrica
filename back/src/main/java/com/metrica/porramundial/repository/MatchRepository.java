@@ -18,4 +18,6 @@ public interface MatchRepository extends JpaRepository<Match, Long> {
     boolean existsByApiMatchId(Long apiMatchId);
 
     List<Match> findByStatusNot(MatchStatus status);
+
+    List<Match> findByStatus(MatchStatus status);
 }

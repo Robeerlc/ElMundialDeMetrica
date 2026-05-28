@@ -1,6 +1,7 @@
 package com.metrica.porramundial.service;
 
 import com.metrica.porramundial.domain.entity.Match;
+import com.metrica.porramundial.domain.enums.MatchStatus;
 import com.metrica.porramundial.domain.enums.TournamentPhase;
 import com.metrica.porramundial.repository.MatchRepository;
 import org.springframework.stereotype.Service;
@@ -22,5 +23,9 @@ public class MatchService {
 
     public List<Match> getMatchesByPhase(TournamentPhase phase) {
         return matchRepository.findByPhase(phase);
+    }
+
+    public List<Match> getAllMatchesOngoing() {
+        return matchRepository.findByStatus(MatchStatus.IN_PROGRESS);
     }
 }

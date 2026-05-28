@@ -26,6 +26,11 @@ public class MatchController {
         return ResponseEntity.ok(matchService.getAllMatches());
     }
 
+    @GetMapping("/ongoing")
+    public ResponseEntity<List<Match>> getAllMatchesOngoing() {
+        return ResponseEntity.ok(matchService.getAllMatchesOngoing());
+    }
+
     @GetMapping("/phase/{phase}")
     public ResponseEntity<List<Match>> getMatchesByPhase(@PathVariable TournamentPhase phase) {
         return ResponseEntity.ok(matchService.getMatchesByPhase(phase));

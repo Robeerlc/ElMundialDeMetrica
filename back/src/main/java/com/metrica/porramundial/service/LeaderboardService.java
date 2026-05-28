@@ -24,7 +24,8 @@ public class LeaderboardService {
                 uap.user.getTotalPoints(),
                 uap.user.getExactMatchesCount(),
                 uap.user.getGoalDiffMatchesCount(),
-                uap.user.getWinnerMatchesCount()
+                uap.user.getWinnerMatchesCount(),
+                uap.user.getCountry()
         );
     }
 
