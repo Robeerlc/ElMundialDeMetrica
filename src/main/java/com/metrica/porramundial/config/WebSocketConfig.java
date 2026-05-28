@@ -31,7 +31,7 @@ public class WebSocketConfig implements WebSocketMessageBrokerConfigurer {
     @Override
     public void registerStompEndpoints(StompEndpointRegistry registry) {
         registry.addEndpoint("/ws-chat")
-                .setAllowedOrigins("http://localhost:4200")
+                .setAllowedOrigins("https://porramundialmetrica-championsfinal-kb4lt-82bcf1-193-70-44-51.sslip.io")
                 .withSockJS();
     }
 
