@@ -10,6 +10,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.client.RestClient;
 
+import java.time.LocalDateTime;
 import java.util.List;
 
 @Service
@@ -87,18 +88,22 @@ public class LiveMatchUpdaterService {
     @Scheduled(fixedRate = 60000)
     @Transactional
     public void lockUpcomingMatches() {
-        java.time.LocalDateTime horaActualUtc = java.time.LocalDateTime.now(java.time.ZoneOffset.UTC);
-
+        LocalDateTime horaActualUtc = LocalDateTime.now(java.time.ZoneOffset.UTC);
         List<Match> activeMatches = matchRepository.findByStatusNot(MatchStatus.FINISHED);
+        for (Match m : activeMatches) {
+            if (m.getStatus() == MatchStatus.PENDING) {
+                boolean shouldBeLocked = horaActualUtc.isAfter(m.getStartTime().minusHours(1));
+                if (m.getIsLocked() != shouldBeLocked) {
+                    m.setIsLocked(shouldBeLocked);
+                    matchRepository.save(m);
 
-        List<Match> matchesToLock = activeMatches.stream()
-                .filter(m -> !m.getIsLocked() && horaActualUtc.isAfter(m.getStartTime().minusHours(1)))
-                .toList();
-
-        if (!matchesToLock.isEmpty()) {
-            matchesToLock.forEach(m -> m.setIsLocked(true));
-            matchRepository.saveAll(matchesToLock);
-            System.out.println("Se han cerrado las apuestas para " + matchesToLock.size() + " partidos (falta menos de 1 hora).");
+                    if (shouldBeLocked) {
+                        System.out.println("[BLOQUEO] Tiempo límite superado. Partido cerrado: " + m.getHomeTeam() + " vs " + m.getAwayTeam());
+                    } else {
+                        System.out.println("[DESBLOQUEO AUTO-CORRECCIÓN] Partido reabierto: " + m.getHomeTeam() + " vs " + m.getAwayTeam());
+                    }
+                }
+            }
         }
     }
 }
