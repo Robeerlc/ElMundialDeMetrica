@@ -23,7 +23,7 @@ public class PredictionController {
         return ResponseEntity.ok(this.predictionService.getAllPredictions());
     }
 
-    @GetMapping("/{id}")
+    @GetMapping("/{id:\\d+}")
     public ResponseEntity<PredictionResponse> getPredictionById(@PathVariable Long id) {
         return ResponseEntity.of(this.predictionService.getPredictionById(id));
     }
