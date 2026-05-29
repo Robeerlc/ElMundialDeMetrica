@@ -61,7 +61,7 @@ public class SecurityConfig {
     @Bean
     public CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration configuration = new CorsConfiguration();
-        configuration.setAllowedOrigins(List.of("https://porramundialmetrica-championsfinal-kb4lt-82bcf1-193-70-44-51.sslip.io/"));
+        configuration.setAllowedOrigins(List.of("https://porramundialmetrica-championsfinal-kb4lt-82bcf1-193-70-44-51.sslip.io"));
         configuration.setAllowedMethods(List.of("GET", "POST", "PUT", "DELETE", "OPTIONS"));
         configuration.setAllowedHeaders(List.of("Authorization", "Content-Type"));
         configuration.setAllowCredentials(true);
