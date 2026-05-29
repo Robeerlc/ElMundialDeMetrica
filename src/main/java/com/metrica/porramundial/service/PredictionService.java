@@ -46,7 +46,6 @@ public class PredictionService {
         Optional<User> user = this.userRepository.findByEmail(username);
         return user.map(value -> this.predictionRepository.findByUser(value)
                 .stream()
-                .filter(prediction -> Boolean.TRUE.equals(prediction.getMatch().getIsLocked()))
                 .map(PredictionResponse::of)
                 .toList()).orElseGet(List::of);
     }
