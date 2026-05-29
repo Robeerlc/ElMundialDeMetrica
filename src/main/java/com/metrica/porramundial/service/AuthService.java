@@ -70,7 +70,7 @@ public class AuthService {
 
     private void enviarCorreoActivacion(String emailDestino, String token) {
         try {
-            String urlActivacion = "http://193.70.44.51:8080/api/auth/activate?token=" + token;
+            String urlActivacion = "https://porramundialmetrica-championsfinalback-w-59fd54-193-70-44-51.sslip.io/api/auth/activate?token=" + token;
             MimeMessage mensaje = mailSender.createMimeMessage();
             MimeMessageHelper helper = new MimeMessageHelper(mensaje, true, "UTF-8");
 
