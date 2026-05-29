@@ -59,10 +59,17 @@ public class AuthService {
 
     @Transactional
     public void activateAccount(String token) {
-        User user = userRepository.findByActivationToken(token).orElseThrow(() -> new IllegalArgumentException("El enlace de activación no es válido o ya ha sido usado."));
-        user.setEnabled(true);
-        user.setActivationToken(null);
-        userRepository.save(user);
+        if (token == null || token.isBlank()) {
+            throw new IllegalArgumentException("El token no puede estar vacío.");
+        }
+
+        User user = userRepository.findByActivationToken(token)
+                .orElseThrow(() -> new IllegalArgumentException("El enlace de activación no es válido."));
+
+        if (!user.isEnabled()) {
+            user.setEnabled(true);
+            userRepository.save(user);
+        }
     }
 
     private void enviarCorreoActivacion(String emailDestino, String token) {
