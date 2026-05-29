@@ -43,7 +43,7 @@ public class LeaderboardService {
     }
 
     private Stream<UserAndPosition> getOrderedUsers() {
-        List<User> userList = userRepository.findAllByOrderByTotalPointsDescExactMatchesCountDescFullNameAsc();
+        List<User> userList = userRepository.findAllByEnabledTrueOrderByTotalPointsDescExactMatchesCountDescFullNameAsc();
         return IntStream.range(0, userList.size())
                 .mapToObj(index -> {
                     User user = userList.get(index);
