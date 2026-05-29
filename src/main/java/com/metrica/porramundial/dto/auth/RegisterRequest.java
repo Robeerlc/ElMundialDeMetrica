@@ -5,6 +5,7 @@ import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Size;
+import jakarta.validation.constraints.Pattern;
 
 public record RegisterRequest(
         @NotBlank(message = "El email no puede estar vacío")
@@ -17,6 +18,7 @@ public record RegisterRequest(
 
         @NotBlank(message = "El nombre completo no puede estar vacío")
         @Size(min = 2, max = 100, message = "El nombre debe tener entre 2 y 100 caracteres")
+        @Pattern(regexp = "^[\\p{L} ]+$", message = "El nombre solo puede contener letras y espacios")
         String fullName,
 
         @NotNull(message = "El país no puede ser nulo")
