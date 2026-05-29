@@ -96,7 +96,50 @@ public class AuthService {
             helper.setTo(emailDestino);
             helper.setSubject("⚽ ¡Verifica tu cuenta en El Mundial de METRICA!");
 
-            String contenidoHtml = "<p>¡Hola!</p>" + "<p>Gracias por registrarte en la plataforma oficial de METRICA para la <strong>Copa Mundial de la FIFA 2026</strong>.</p>" + "<p>Para activar tu cuenta y poder iniciar sesión, solo tienes que hacer clic en el siguiente enlace:</p>" + "<p>👉 <a href=\"" + urlActivacion + "\" style=\"color: #0056b3; font-weight: bold; text-decoration: none;\">¡Activa tu cuenta y participa ya!</a></p>" + "<p>¡Mucha suerte en tus pronósticos! 🏆</p>";
+            String contenidoHtml = "<!DOCTYPE html>" +
+                    "<html lang=\"es\">" +
+                    "<head>" +
+                    "<meta charset=\"UTF-8\">" +
+                    "<meta name=\"viewport\" content=\"width=device-width, initial-scale=1.0\">" +
+                    "<style>" +
+                    "body { margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Helvetica Neue', sans-serif; background: #0d1117; color: #ffffff; }" +
+                    ".container { max-width: 600px; margin: 0 auto; background: #161b22; border: 1px solid #30363d; border-radius: 12px; overflow: hidden; }" +
+                    ".header { background: linear-gradient(135deg, #58a6ff, #388bfd); padding: 2rem 1.5rem; text-align: center; }" +
+                    ".header h1 { margin: 0; font-size: 1.8rem; font-weight: 900; color: #ffffff; }" +
+                    ".content { padding: 2rem 1.5rem; }" +
+                    ".greeting { font-size: 16px; color: #c9d1d9; margin-bottom: 1.5rem; line-height: 1.6; }" +
+                    ".greeting strong { color: #58a6ff; }" +
+                    ".cta-section { background: rgba(88, 166, 255, 0.08); border: 1px solid #30363d; border-radius: 8px; padding: 2rem 1.5rem; text-align: center; margin: 2rem 0; }" +
+                    ".cta-text { font-size: 14px; color: #8b949e; margin-bottom: 1.5rem; }" +
+                    ".cta-button { display: inline-block; background: #388bfd; color: #ffffff; padding: 0.875rem 2rem; border-radius: 6px; text-decoration: none; font-weight: 600; font-size: 15px; transition: opacity 0.2s; }" +
+                    ".cta-button:hover { opacity: 0.85; }" +
+                    ".footer { padding: 1.5rem; background: #0d1117; border-top: 1px solid #30363d; text-align: center; font-size: 12px; color: #6e7681; }" +
+                    ".emoji { font-size: 2rem; }" +
+                    "</style>" +
+                    "</head>" +
+                    "<body>" +
+                    "<div class=\"container\">" +
+                    "<div class=\"header\">" +
+                    "<h1>⚽ METRICA MUNDIAL 2026</h1>" +
+                    "</div>" +
+                    "<div class=\"content\">" +
+                    "<p class=\"greeting\">¡Hola! 👋</p>" +
+                    "<p class=\"greeting\">Gracias por registrarte en la plataforma oficial de <strong>METRICA</strong> para la <strong>Copa Mundial de la FIFA 2026</strong>.</p>" +
+                    "<div class=\"cta-section\">" +
+                    "<p class=\"cta-text\">Para activar tu cuenta y poder iniciar sesión, haz clic en el botón de abajo:</p>" +
+                    "<a href=\"" + urlActivacion + "\" class=\"cta-button\">Activar Cuenta</a>" +
+                    "</div>" +
+                    "<p class=\"greeting\">Una vez activada tu cuenta, podrás:</p>" +
+                    "<p class=\"greeting\" style=\"margin-left: 1rem;\">✓ Hacer predicciones en todos los partidos<br/>✓ Competir en el ranking mundial<br/>✓ Interactuar con otros usuarios en el chat en vivo</p>" +
+                    "<p class=\"greeting\" style=\"margin-top: 2rem;\">¡Que disfrutes del torneo! 🏆</p>" +
+                    "</div>" +
+                    "<div class=\"footer\">" +
+                    "<p>Si no te registraste en METRICA, puedes ignorar este correo.</p>" +
+                    "<p style=\"margin-top: 0.5rem;\">© 2026 METRICA Global. Todos los derechos reservados.</p>" +
+                    "</div>" +
+                    "</div>" +
+                    "</body>" +
+                    "</html>";
             helper.setText(contenidoHtml, true);
 
             mailSender.send(mensaje);
