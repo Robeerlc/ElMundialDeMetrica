@@ -68,20 +68,14 @@ public class PredictionService {
         User user = userOp.get();
         Match match = matchOp.get();
 
-        Match firstMatchOfPhase = matchRepository.findFirstByPhaseOrderByStartTimeAsc(match.getPhase())
-                .orElseThrow(() -> new IllegalStateException("No se encontraron partidos para la fase: " + match.getPhase()));
-        java.time.LocalDateTime phaseLockTime = firstMatchOfPhase.getStartTime().minusHours(24);
+        java.time.LocalDateTime matchLockTime = match.getStartTime().minusHours(1);
 
-        if (java.time.LocalDateTime.now(java.time.ZoneOffset.UTC).isAfter(phaseLockTime)) {
-            return new PredictionDataType.Fail("¡Demasiado tarde! Las apuestas para la fase de " + match.getPhase() + " se cerraron 24 horas antes de su primer partido.");
+        if (java.time.LocalDateTime.now(java.time.ZoneOffset.UTC).isAfter(matchLockTime)) {
+            return new PredictionDataType.Fail("¡Demasiado tarde! Las apuestas para este partido se cerraron 1 hora antes del pitido inicial.");
         }
 
         if (match.getIsLocked()) {
             return new PredictionDataType.Fail("Match is locked!");
-        }
-
-        if (this.predictionRepository.findByUserAndMatch(user, match).isPresent()) {
-            return new PredictionDataType.Fail("Already made a prediction");
         }
 
         boolean isDraw = pcr.homeGoals().equals(pcr.awayGoals());
@@ -95,36 +89,44 @@ public class PredictionService {
             }
         }
 
-        Prediction prediction = Prediction.builder()
-                .user(user)
-                .match(match)
-                .awayGoals(pcr.awayGoals())
-                .homeGoals(pcr.homeGoals())
-                .isDraw(isDraw)
-                .winningTeam(pcr.winningTeam())
-                .build();
+        Optional<Prediction> existingPredictionOp = this.predictionRepository.findByUserAndMatch(user, match);
+        Prediction prediction;
+
+        if (existingPredictionOp.isPresent()) {
+            prediction = existingPredictionOp.get();
+            prediction.setHomeGoals(pcr.homeGoals());
+            prediction.setAwayGoals(pcr.awayGoals());
+            prediction.setIsDraw(isDraw);
+        } else {
+            prediction = Prediction.builder()
+                    .user(user)
+                    .match(match)
+                    .awayGoals(pcr.awayGoals())
+                    .homeGoals(pcr.homeGoals())
+                    .isDraw(isDraw)
+                    .build();
+        }
 
         if (!isDraw) {
-            prediction.setWinningTeam(
-                    pcr.homeGoals() > pcr.awayGoals()
-                            ? match.getHomeTeam()
-                            : match.getAwayTeam()
-            );
+            prediction.setWinningTeam(pcr.homeGoals() > pcr.awayGoals() ? match.getHomeTeam() : match.getAwayTeam());
         } else if (match.getPhase() == TournamentPhase.GROUP_STAGE) {
             prediction.setWinningTeam(null);
+        } else {
+            prediction.setWinningTeam(pcr.winningTeam());
         }
 
         this.predictionRepository.save(prediction);
 
-        PredictionHistory history = this.predictionHistoryRepository
-                .findByUser(user)
-                .orElseGet(() -> PredictionHistory.builder()
-                        .user(user)
-                        .build()
-                );
-
-        history.getPredictions().add(prediction);
-        this.predictionHistoryRepository.save(history);
+        if (existingPredictionOp.isEmpty()) {
+            PredictionHistory history = this.predictionHistoryRepository
+                    .findByUser(user)
+                    .orElseGet(() -> PredictionHistory.builder()
+                            .user(user)
+                            .build()
+                    );
+            history.getPredictions().add(prediction);
+            this.predictionHistoryRepository.save(history);
+        }
 
         return new PredictionDataType.Created();
     }

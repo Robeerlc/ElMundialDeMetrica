@@ -2,7 +2,6 @@ package com.metrica.porramundial.service;
 
 import com.metrica.porramundial.domain.entity.Match;
 import com.metrica.porramundial.domain.enums.MatchStatus;
-import com.metrica.porramundial.domain.enums.TournamentPhase;
 import com.metrica.porramundial.dto.FootballDataResponse;
 import com.metrica.porramundial.repository.MatchRepository;
 import org.springframework.beans.factory.annotation.Value;
@@ -12,7 +11,6 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.client.RestClient;
 
 import java.util.List;
-import java.util.Optional;
 
 @Service
 public class LiveMatchUpdaterService {
@@ -86,28 +84,21 @@ public class LiveMatchUpdaterService {
         }
     }
 
-    @Scheduled(cron = "0 0 * * * *")
+    @Scheduled(fixedRate = 60000)
     @Transactional
-    public void lockUpcomingPhases() {
-        System.out.println("Revisando si hay fases que deban bloquearse...");
-        for (TournamentPhase phase : TournamentPhase.values()) {
-            Optional<Match> firstMatchOp = matchRepository.findFirstByPhaseOrderByStartTimeAsc(phase);
-            if (firstMatchOp.isEmpty()) continue;
+    public void lockUpcomingMatches() {
+        java.time.LocalDateTime horaActualUtc = java.time.LocalDateTime.now(java.time.ZoneOffset.UTC);
 
-            Match firstMatch = firstMatchOp.get();
-            java.time.LocalDateTime phaseLockTime = firstMatch.getStartTime().minusHours(24);
+        List<Match> activeMatches = matchRepository.findByStatusNot(MatchStatus.FINISHED);
 
-            if (java.time.LocalDateTime.now(java.time.ZoneOffset.UTC).isAfter(phaseLockTime)) {
-                List<Match> matchesToLock = matchRepository.findByPhase(phase).stream()
-                        .filter(m -> !m.getIsLocked())
-                        .toList();
+        List<Match> matchesToLock = activeMatches.stream()
+                .filter(m -> !m.getIsLocked() && horaActualUtc.isAfter(m.getStartTime().minusHours(1)))
+                .toList();
 
-                if (!matchesToLock.isEmpty()) {
-                    matchesToLock.forEach(m -> m.setIsLocked(true));
-                    matchRepository.saveAll(matchesToLock);
-                    System.out.println("Bloqueados " + matchesToLock.size() + " partidos de la fase " + phase);
-                }
-            }
+        if (!matchesToLock.isEmpty()) {
+            matchesToLock.forEach(m -> m.setIsLocked(true));
+            matchRepository.saveAll(matchesToLock);
+            System.out.println("Se han cerrado las apuestas para " + matchesToLock.size() + " partidos (falta menos de 1 hora).");
         }
     }
 }
