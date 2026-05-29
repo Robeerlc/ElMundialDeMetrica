@@ -35,6 +35,25 @@ public class AuthService {
         this.mailSender = mailSender;
     }
 
+    private static String normalizeEmail(String email) {
+        if (email == null)
+            throw new IllegalArgumentException("El email no puede ser nulo.");
+        return email.trim().toLowerCase(Locale.ROOT);
+    }
+
+    private static String normalizeFullName(String fullName) {
+        if (fullName == null)
+            throw new IllegalArgumentException("El nombre completo no puede ser nulo.");
+
+        String normalized = fullName.trim().replaceAll("\\s+", " ");
+        if (normalized.isBlank())
+            throw new IllegalArgumentException("El nombre completo no puede estar vacío.");
+
+        if (!normalized.matches("^[\\p{L} ]+$"))
+            throw new IllegalArgumentException("El nombre solo puede contener letras y espacios.");
+        return normalized;
+    }
+
     public AuthResponse login(LoginRequest request) {
         String normalizedEmail = normalizeEmail(request.email());
         authenticationManager.authenticate(new UsernamePasswordAuthenticationToken(normalizedEmail, request.password()));
@@ -66,10 +85,9 @@ public class AuthService {
         User user = userRepository.findByActivationToken(token)
                 .orElseThrow(() -> new IllegalArgumentException("El enlace de activación no es válido."));
 
-        if (!user.isEnabled()) {
-            user.setEnabled(true);
-            userRepository.save(user);
-        }
+        if (!user.isEnabled()) user.setEnabled(true);
+        user.setActivationToken(null);
+        userRepository.save(user);
     }
 
     private void enviarCorreoActivacion(String emailDestino, String token) {
@@ -89,28 +107,5 @@ public class AuthService {
         } catch (Exception e) {
             System.err.println("Error al enviar correo de activación a " + emailDestino + ": " + e.getMessage());
         }
-    }
-
-    private static String normalizeEmail(String email) {
-        if (email == null)
-            throw new IllegalArgumentException("El email no puede ser nulo.");
-
-        return email.trim().toLowerCase(Locale.ROOT);
-    }
-
-    private static String normalizeFullName(String fullName) {
-        if (fullName == null) {
-            throw new IllegalArgumentException("El nombre completo no puede ser nulo.");
-        }
-
-        String normalized = fullName.trim().replaceAll("\\s+", " ");
-        if (normalized.isBlank()) {
-            throw new IllegalArgumentException("El nombre completo no puede estar vacío.");
-        }
-        if (!normalized.matches("^[\\p{L} ]+$")) {
-            throw new IllegalArgumentException("El nombre solo puede contener letras y espacios.");
-        }
-
-        return normalized;
     }
 }

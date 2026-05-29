@@ -46,7 +46,6 @@ public class DataLoader implements CommandLineRunner {
                     .uri("/competitions/" + competitionCode + "/matches")
                     .retrieve()
                     .body(FootballDataResponse.class);
-
             if (apiResponse != null && apiResponse.matches() != null) {
                 List<Match> matchesToSave = new ArrayList<>();
 
@@ -74,7 +73,6 @@ public class DataLoader implements CommandLineRunner {
                             .status(status)
                             .isLocked(status == MatchStatus.FINISHED || status == MatchStatus.IN_PROGRESS)
                             .build();
-
                     matchesToSave.add(match);
                 }
 

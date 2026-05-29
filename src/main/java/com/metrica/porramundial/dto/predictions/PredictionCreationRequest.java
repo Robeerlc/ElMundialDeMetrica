@@ -1,9 +1,9 @@
 package com.metrica.porramundial.dto.predictions;
 
+import jakarta.validation.constraints.Digits;
+import jakarta.validation.constraints.Max;
 import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.NotNull;
-import jakarta.validation.constraints.Max;
-import jakarta.validation.constraints.Digits;
 
 public record PredictionCreationRequest(@NotNull(message = "El ID del partido no puede ser nulo") Long idMatch,
 

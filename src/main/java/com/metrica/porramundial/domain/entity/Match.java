@@ -45,4 +45,3 @@ public class Match {
     @Builder.Default
     private Boolean isLocked = false;
 }
-

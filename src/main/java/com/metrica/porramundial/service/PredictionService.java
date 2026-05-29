@@ -17,6 +17,8 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.security.core.Authentication;
 import org.springframework.stereotype.Service;
 
+import java.time.LocalDateTime;
+import java.time.ZoneOffset;
 import java.util.List;
 import java.util.Optional;
 
@@ -36,12 +38,6 @@ public class PredictionService {
                 .toList();
     }
 
-    public Optional<PredictionResponse> getPredictionById(Long id) {
-        Optional<Prediction> prediction = this.predictionRepository.findById(id)
-                .filter(value -> Boolean.TRUE.equals(value.getMatch().getIsLocked()));
-        return prediction.map(PredictionResponse::of);
-    }
-
     public List<PredictionResponse> getPredictionsByUsername(String username) {
         Optional<User> user = this.userRepository.findByEmail(username);
         return user.map(value -> this.predictionRepository.findByUser(value)
@@ -55,33 +51,27 @@ public class PredictionService {
         String username = authentication.getName();
 
         Optional<User> userOp = this.userRepository.findByEmail(username);
-        if (userOp.isEmpty()) {
-            return new PredictionDataType.Fail("User not found");
-        }
+        if (userOp.isEmpty()) return new PredictionDataType.Fail("User not found");
 
         Optional<Match> matchOp = matchRepository.findById(pcr.idMatch());
-        if (matchOp.isEmpty()) {
-            return new PredictionDataType.Fail("Match not found");
-        }
+        if (matchOp.isEmpty()) return new PredictionDataType.Fail("Match not found");
 
         User user = userOp.get();
         Match match = matchOp.get();
 
-        java.time.LocalDateTime matchLockTime = match.getStartTime().minusHours(1);
+        LocalDateTime matchLockTime = match.getStartTime().minusHours(1);
 
-        if (java.time.LocalDateTime.now(java.time.ZoneOffset.UTC).isAfter(matchLockTime)) {
+        if (LocalDateTime.now(ZoneOffset.UTC).isAfter(matchLockTime))
             return new PredictionDataType.Fail("¡Demasiado tarde! Las apuestas para este partido se cerraron 1 hora antes del pitido inicial.");
-        }
 
-        if (match.getIsLocked()) {
+        if (match.getIsLocked())
             return new PredictionDataType.Fail("Match is locked!");
-        }
 
         boolean isDraw = pcr.homeGoals().equals(pcr.awayGoals());
         if (isDraw && match.getPhase() != TournamentPhase.GROUP_STAGE) {
-            if (pcr.winningTeam() == null || pcr.winningTeam().isBlank()) {
+            if (pcr.winningTeam() == null || pcr.winningTeam().isBlank())
                 return new PredictionDataType.Fail("En eliminatorias, si predices un empate, debes elegir quién ganará por penaltis.");
-            }
+
             if (!pcr.winningTeam().equalsIgnoreCase(match.getHomeTeam()) &&
                     !pcr.winningTeam().equalsIgnoreCase(match.getAwayTeam())) {
                 return new PredictionDataType.Fail("El ganador debe ser obligatoriamente " + match.getHomeTeam() + " o " + match.getAwayTeam());
@@ -106,16 +96,12 @@ public class PredictionService {
                     .build();
         }
 
-        if (!isDraw) {
+        if (!isDraw)
             prediction.setWinningTeam(pcr.homeGoals() > pcr.awayGoals() ? match.getHomeTeam() : match.getAwayTeam());
-        } else if (match.getPhase() == TournamentPhase.GROUP_STAGE) {
-            prediction.setWinningTeam(null);
-        } else {
-            prediction.setWinningTeam(pcr.winningTeam());
-        }
+        else if (match.getPhase() == TournamentPhase.GROUP_STAGE) prediction.setWinningTeam(null);
+        else prediction.setWinningTeam(pcr.winningTeam());
 
         this.predictionRepository.save(prediction);
-
         if (existingPredictionOp.isEmpty()) {
             PredictionHistory history = this.predictionHistoryRepository
                     .findByUser(user)
@@ -126,7 +112,6 @@ public class PredictionService {
             history.getPredictions().add(prediction);
             this.predictionHistoryRepository.save(history);
         }
-
         return new PredictionDataType.Created();
     }
 }

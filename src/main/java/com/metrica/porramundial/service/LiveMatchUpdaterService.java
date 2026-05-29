@@ -97,11 +97,11 @@ public class LiveMatchUpdaterService {
                     m.setIsLocked(shouldBeLocked);
                     matchRepository.save(m);
 
-                    if (shouldBeLocked) {
+                    if (shouldBeLocked)
                         System.out.println("[BLOQUEO] Tiempo límite superado. Partido cerrado: " + m.getHomeTeam() + " vs " + m.getAwayTeam());
-                    } else {
+                    else
                         System.out.println("[DESBLOQUEO AUTO-CORRECCIÓN] Partido reabierto: " + m.getHomeTeam() + " vs " + m.getAwayTeam());
-                    }
+
                 }
             }
         }
