@@ -31,12 +31,14 @@ public class PredictionService {
     public List<PredictionResponse> getAllPredictions() {
         return this.predictionRepository.findAll()
                 .stream()
+                .filter(prediction -> Boolean.TRUE.equals(prediction.getMatch().getIsLocked()))
                 .map(PredictionResponse::of)
                 .toList();
     }
 
     public Optional<PredictionResponse> getPredictionById(Long id) {
-        Optional<Prediction> prediction = this.predictionRepository.findById(id);
+        Optional<Prediction> prediction = this.predictionRepository.findById(id)
+                .filter(value -> Boolean.TRUE.equals(value.getMatch().getIsLocked()));
         return prediction.map(PredictionResponse::of);
     }
 
@@ -44,6 +46,7 @@ public class PredictionService {
         Optional<User> user = this.userRepository.findByEmail(username);
         return user.map(value -> this.predictionRepository.findByUser(value)
                 .stream()
+                .filter(prediction -> Boolean.TRUE.equals(prediction.getMatch().getIsLocked()))
                 .map(PredictionResponse::of)
                 .toList()).orElseGet(List::of);
     }
