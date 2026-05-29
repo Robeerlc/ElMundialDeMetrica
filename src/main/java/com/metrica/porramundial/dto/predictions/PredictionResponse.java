@@ -4,7 +4,7 @@ import com.metrica.porramundial.domain.entity.Prediction;
 
 public record PredictionResponse(
         Long id,
-        Long userId,
+        String username,
         Long matchId,
         Integer homeGoals,
         Integer awayGoals,
@@ -15,7 +15,7 @@ public record PredictionResponse(
     public static PredictionResponse of(Prediction prediction) {
         return new PredictionResponse(
                 prediction.getId(),
-                prediction.getUser().getId(),
+                prediction.getUser().getUsername(),
                 prediction.getMatch().getId(),
                 prediction.getHomeGoals(),
                 prediction.getAwayGoals(),
