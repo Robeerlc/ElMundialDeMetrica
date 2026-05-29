@@ -30,7 +30,7 @@ public class AuthController {
     @GetMapping("/activate")
     public ResponseEntity<String> activate(@RequestParam String token) {
         authService.activateAccount(token);
-        String htmlResponse = "<html><body><h2>¡Cuenta activada con éxito!</h2><p>Ya puedes volver a la aplicacion e iniciar sesion.</p></body></html>";
+        String htmlResponse = "<html><body><h2>¡Cuenta activada con éxito!</h2><p>Si el enlace ya había sido usado o la cuenta estaba activada, no pasa nada: puedes iniciar sesión directamente.</p></body></html>";
         return ResponseEntity.ok().header("Content-Type", "text/html").body(htmlResponse);
     }
 }
