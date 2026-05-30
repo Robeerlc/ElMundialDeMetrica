@@ -11,8 +11,7 @@ public record FootballDataResponse(List<MatchData> matches) {
     public record TeamData(String shortName) {
     }
 
-    // Added extraTime and penalties fields to map all possible score sub-objects from football-data
-    public record ScoreData(TimeData fullTime, TimeData regularTime, TimeData halfTime, TimeData extraTime, TimeData penalties) {
+    public record ScoreData(String winner, String duration, TimeData fullTime, TimeData regularTime, TimeData penalties) {
     }
 
     public record TimeData(Integer home, Integer away) {
