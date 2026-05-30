@@ -64,6 +64,26 @@ public class DataLoader implements CommandLineRunner {
                     if (phase == null) continue;
 
                     MatchStatus status = mapStatus(data.status());
+
+                    int homeG = 0;
+                    int awayG = 0;
+                    String winningTeam = null;
+
+                    if (data.score() != null && data.score().fullTime() != null) {
+                        if (data.score().fullTime().home() != null) homeG = data.score().fullTime().home();
+                        if (data.score().fullTime().away() != null) awayG = data.score().fullTime().away();
+
+                        String winnerField = data.score().winner();
+                        if ("HOME_TEAM".equalsIgnoreCase(winnerField)) {
+                            winningTeam = homeTeam;
+                        } else if ("AWAY_TEAM".equalsIgnoreCase(winnerField)) {
+                            winningTeam = awayTeam;
+                        } else if (status == MatchStatus.FINISHED) {
+                            if (homeG > awayG) winningTeam = homeTeam;
+                            else if (awayG > homeG) winningTeam = awayTeam;
+                        }
+                    }
+
                     Match match = Match.builder()
                             .apiMatchId(data.id())
                             .homeTeam(homeTeam)
@@ -72,6 +92,9 @@ public class DataLoader implements CommandLineRunner {
                             .phase(phase)
                             .status(status)
                             .isLocked(status == MatchStatus.FINISHED || status == MatchStatus.IN_PROGRESS)
+                            .homeGoals(homeG)
+                            .awayGoals(awayG)
+                            .winningTeam(winningTeam)
                             .build();
                     matchesToSave.add(match);
                 }
