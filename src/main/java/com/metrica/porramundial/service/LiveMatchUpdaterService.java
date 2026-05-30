@@ -88,7 +88,6 @@ public class LiveMatchUpdaterService {
                                             winningTeam = dbMatch.getAwayTeam();
                                         }
                                     }
-
                                     dbMatch.setStatus(MatchStatus.FINISHED);
                                     dbMatch.setIsLocked(true);
                                     dbMatch.setHomeGoals(homeGoals);
