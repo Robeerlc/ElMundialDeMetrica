@@ -11,7 +11,7 @@ public record FootballDataResponse(List<MatchData> matches) {
     public record TeamData(String shortName) {
     }
 
-    public record ScoreData(TimeData fullTime) {
+    public record ScoreData(TimeData fullTime, TimeData regularTime, TimeData halfTime) {
     }
 
     public record TimeData(Integer home, Integer away) {

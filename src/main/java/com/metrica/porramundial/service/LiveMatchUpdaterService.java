@@ -50,8 +50,8 @@ public class LiveMatchUpdaterService {
                         if (dbMatch.getApiMatchId().equals(liveFixture.id())) {
 
                             String apiStatus = liveFixture.status();
-                            int homeGoals = (liveFixture.score() != null && liveFixture.score().fullTime() != null && liveFixture.score().fullTime().home() != null) ? liveFixture.score().fullTime().home() : 0;
-                            int awayGoals = (liveFixture.score() != null && liveFixture.score().fullTime() != null && liveFixture.score().fullTime().away() != null) ? liveFixture.score().fullTime().away() : 0;
+                            int homeGoals = resolveHomeGoals(liveFixture);
+                            int awayGoals = resolveAwayGoals(liveFixture);
                             if ("IN_PLAY".equals(apiStatus) || "PAUSED".equals(apiStatus)) {
                                 if (dbMatch.getStatus() == MatchStatus.PENDING) {
                                     dbMatch.setStatus(MatchStatus.IN_PROGRESS);
@@ -83,6 +83,24 @@ public class LiveMatchUpdaterService {
                 System.err.println("Error al contactar con Football-Data para " + comp + ": " + e.getMessage());
             }
         }
+    }
+
+    private int resolveHomeGoals(FootballDataResponse.MatchData liveFixture) {
+        if (liveFixture.score() == null) return 0;
+        FootballDataResponse.ScoreData score = liveFixture.score();
+        if (score.fullTime() != null && score.fullTime().home() != null) return score.fullTime().home();
+        if (score.regularTime() != null && score.regularTime().home() != null) return score.regularTime().home();
+        if (score.halfTime() != null && score.halfTime().home() != null) return score.halfTime().home();
+        return 0;
+    }
+
+    private int resolveAwayGoals(FootballDataResponse.MatchData liveFixture) {
+        if (liveFixture.score() == null) return 0;
+        FootballDataResponse.ScoreData score = liveFixture.score();
+        if (score.fullTime() != null && score.fullTime().away() != null) return score.fullTime().away();
+        if (score.regularTime() != null && score.regularTime().away() != null) return score.regularTime().away();
+        if (score.halfTime() != null && score.halfTime().away() != null) return score.halfTime().away();
+        return 0;
     }
 
     @Scheduled(fixedRate = 60000)
