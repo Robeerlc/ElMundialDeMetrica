@@ -33,7 +33,6 @@ public class ScoringService {
             score(prediction, match);
             User user = prediction.getUser();
             user.setTotalPoints(user.getTotalPoints() + prediction.getPointsEarned());
-
             if (prediction.getResultType() != null) {
                 switch (prediction.getResultType()) {
                     case EXACT_MATCH -> user.setExactMatchesCount(user.getExactMatchesCount() + 1);
