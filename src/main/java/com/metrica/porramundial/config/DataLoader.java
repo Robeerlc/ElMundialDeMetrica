@@ -11,8 +11,6 @@ import org.springframework.boot.CommandLineRunner;
 import org.springframework.stereotype.Component;
 import org.springframework.web.client.RestClient;
 
-import java.time.LocalDateTime;
-import java.time.ZoneOffset;
 import java.time.ZonedDateTime;
 import java.util.ArrayList;
 import java.util.List;
@@ -37,29 +35,30 @@ public class DataLoader implements CommandLineRunner {
     @Override
     public void run(String @NonNull ... args) {
         System.out.println("Arrancando inyector de partidos...");
-        fetchAndSaveMatches();
+        fetchAndSaveMatches("WC", false);
+        fetchAndSaveMatches("CL", true);
     }
 
-    private void fetchAndSaveMatches() {
-        System.out.println("Buscando partidos para la competición: " + "WC" + "...");
+    private void fetchAndSaveMatches(String competitionCode, boolean onlyFinal) {
+        System.out.println("Buscando partidos para la competición: " + competitionCode + "...");
         try {
             FootballDataResponse apiResponse = restClient.get()
-                    .uri("/competitions/" + "WC" + "/matches")
+                    .uri("/competitions/" + competitionCode + "/matches")
                     .retrieve()
                     .body(FootballDataResponse.class);
             if (apiResponse != null && apiResponse.matches() != null) {
                 List<Match> matchesToSave = new ArrayList<>();
                 for (FootballDataResponse.MatchData data : apiResponse.matches()) {
+
+                    if (onlyFinal && !"FINAL".equalsIgnoreCase(data.stage())) continue;
                     if (matchRepository.existsByApiMatchId(data.id())) continue;
                     if (data.homeTeam() == null || data.awayTeam() == null ||
                             data.homeTeam().shortName() == null || data.awayTeam().shortName() == null) continue;
 
                     String homeTeam = data.homeTeam().shortName();
                     String awayTeam = data.awayTeam().shortName();
-                    LocalDateTime matchStartTime = ZonedDateTime.parse(data.utcDate())
-                            .withZoneSameInstant(ZoneOffset.UTC)
-                            .toLocalDateTime();
 
+                    ZonedDateTime zdt = ZonedDateTime.parse(data.utcDate());
                     TournamentPhase phase = mapPhase(data.stage());
                     if (phase == null) continue;
                     MatchStatus status = mapStatus(data.status());
@@ -83,7 +82,7 @@ public class DataLoader implements CommandLineRunner {
                             .apiMatchId(data.id())
                             .homeTeam(homeTeam)
                             .awayTeam(awayTeam)
-                            .startTime(matchStartTime)
+                            .startTime(zdt.toLocalDateTime())
                             .phase(phase)
                             .status(status)
                             .isLocked(status == MatchStatus.FINISHED || status == MatchStatus.IN_PROGRESS)
@@ -96,13 +95,12 @@ public class DataLoader implements CommandLineRunner {
 
                 if (!matchesToSave.isEmpty()) {
                     matchRepository.saveAll(matchesToSave);
-                    System.out.println(matchesToSave.size() + " NUEVOS partidos inyectados para " + "WC");
-                } else {
-                    System.out.println("Todos los partidos de " + "WC" + " requeridos ya estaban en la BD.");
-                }
+                    System.out.println(matchesToSave.size() + " NUEVOS partidos inyectados para " + competitionCode);
+                } else
+                    System.out.println("Todos los partidos de " + competitionCode + " requeridos ya estaban en la BD.");
             }
         } catch (Exception e) {
-            System.err.println("Error con Football-Data (" + "WC" + "): " + e.getMessage());
+            System.err.println("Error con Football-Data (" + competitionCode + "): " + e.getMessage());
         }
     }
 
