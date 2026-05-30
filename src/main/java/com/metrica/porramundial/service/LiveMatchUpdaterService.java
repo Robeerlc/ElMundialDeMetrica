@@ -113,19 +113,45 @@ public class LiveMatchUpdaterService {
     private int resolveHomeGoals(FootballDataResponse.MatchData liveFixture) {
         if (liveFixture.score() == null) return 0;
         FootballDataResponse.ScoreData score = liveFixture.score();
-        if (score.fullTime() != null && score.fullTime().home() != null) {
-            return score.fullTime().home();
+
+        if (score.regularTime() != null && score.regularTime().home() != null) {
+            int goals = score.regularTime().home();
+            if (score.extraTime() != null && score.extraTime().home() != null) {
+                goals += score.extraTime().home();
+            }
+            return goals;
         }
-        return 0;
+
+        int goals = 0;
+        if (score.fullTime() != null && score.fullTime().home() != null) {
+            goals = score.fullTime().home();
+            if (score.penalties() != null && score.penalties().home() != null) {
+                goals -= score.penalties().home();
+            }
+        }
+        return Math.max(0, goals);
     }
 
     private int resolveAwayGoals(FootballDataResponse.MatchData liveFixture) {
         if (liveFixture.score() == null) return 0;
         FootballDataResponse.ScoreData score = liveFixture.score();
-        if (score.fullTime() != null && score.fullTime().away() != null) {
-            return score.fullTime().away();
+
+        if (score.regularTime() != null && score.regularTime().away() != null) {
+            int goals = score.regularTime().away();
+            if (score.extraTime() != null && score.extraTime().away() != null) {
+                goals += score.extraTime().away();
+            }
+            return goals;
         }
-        return 0;
+
+        int goals = 0;
+        if (score.fullTime() != null && score.fullTime().away() != null) {
+            goals = score.fullTime().away();
+            if (score.penalties() != null && score.penalties().away() != null) {
+                goals -= score.penalties().away();
+            }
+        }
+        return Math.max(0, goals);
     }
 
     @Scheduled(fixedRate = 60000)
