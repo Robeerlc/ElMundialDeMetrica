@@ -54,6 +54,7 @@ public class LiveMatchUpdaterService {
                             }
                             int homeGoals = resolveHomeGoals(liveFixture);
                             int awayGoals = resolveAwayGoals(liveFixture);
+
                             if ("IN_PLAY".equals(apiStatus) || "PAUSED".equals(apiStatus)) {
                                 if (dbMatch.getStatus() == MatchStatus.PENDING) {
                                     dbMatch.setStatus(MatchStatus.IN_PROGRESS);
@@ -73,9 +74,16 @@ public class LiveMatchUpdaterService {
                                     if ("HOME_TEAM".equalsIgnoreCase(winnerField)) winningTeam = dbMatch.getHomeTeam();
                                     else if ("AWAY_TEAM".equalsIgnoreCase(winnerField)) winningTeam = dbMatch.getAwayTeam();
                                     else {
-                                        if (homeGoals > awayGoals) winningTeam = dbMatch.getHomeTeam();
-                                        else if (awayGoals > homeGoals) winningTeam = dbMatch.getAwayTeam();
+                                        int rawFullTimeHome = 0;
+                                        int rawFullTimeAway = 0;
+                                        if (liveFixture.score() != null && liveFixture.score().fullTime() != null) {
+                                            rawFullTimeHome = liveFixture.score().fullTime().home() != null ? liveFixture.score().fullTime().home() : 0;
+                                            rawFullTimeAway = liveFixture.score().fullTime().away() != null ? liveFixture.score().fullTime().away() : 0;
+                                        }
+                                        if (rawFullTimeHome > rawFullTimeAway) winningTeam = dbMatch.getHomeTeam();
+                                        else if (rawFullTimeAway > rawFullTimeHome) winningTeam = dbMatch.getAwayTeam();
                                     }
+
                                     dbMatch.setStatus(MatchStatus.FINISHED);
                                     dbMatch.setIsLocked(true);
                                     dbMatch.setHomeGoals(homeGoals);
