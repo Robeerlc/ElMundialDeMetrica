@@ -7,6 +7,7 @@ import com.metrica.porramundial.domain.entity.User;
 import com.metrica.porramundial.domain.enums.PredictionResultType;
 import com.metrica.porramundial.repository.PredictionHistoryRepository;
 import com.metrica.porramundial.repository.PredictionRepository;
+import com.metrica.porramundial.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -20,18 +21,16 @@ public class ScoringService {
 
     private final PredictionRepository predictionRepository;
     private final PredictionHistoryRepository predictionHistoryRepository;
+    private final UserRepository userRepository;
 
     @Transactional
     public void scoreMatch(Match match) {
-        if (match.getHomeGoals() == null || match.getAwayGoals() == null) {
+        if (match.getHomeGoals() == null || match.getAwayGoals() == null)
             throw new IllegalStateException("Match " + match.getId() + " has no result yet");
-        }
-
         List<Prediction> predictions = predictionRepository.findByMatch(match);
 
         for (Prediction prediction : predictions) {
             score(prediction, match);
-
             User user = prediction.getUser();
             user.setTotalPoints(user.getTotalPoints() + prediction.getPointsEarned());
 
@@ -45,16 +44,14 @@ public class ScoringService {
                 }
             }
 
+            userRepository.save(user);
             PredictionHistory history = predictionHistoryRepository
                     .findByUser(user)
                     .orElseGet(() -> {
                         PredictionHistory newHistory = PredictionHistory.builder().user(user).build();
                         return predictionHistoryRepository.save(newHistory);
                     });
-
-            if (!history.getPredictions().contains(prediction)) {
-                history.getPredictions().add(prediction);
-            }
+            if (!history.getPredictions().contains(prediction)) history.getPredictions().add(prediction);
             history.recalculate();
         }
     }
@@ -70,15 +67,10 @@ public class ScoringService {
         boolean exactScore = predHome == realHome && predAway == realAway;
 
         PredictionResultType resultType;
-        if (!correctWinner) {
-            resultType = PredictionResultType.LOST;
-        } else if (exactScore) {
-            resultType = PredictionResultType.EXACT_MATCH;
-        } else if (correctDiff) {
-            resultType = PredictionResultType.GOAL_DIFFERENCE;
-        } else {
-            resultType = PredictionResultType.WINNER;
-        }
+        if (!correctWinner) resultType = PredictionResultType.LOST;
+        else if (exactScore) resultType = PredictionResultType.EXACT_MATCH;
+        else if (correctDiff) resultType = PredictionResultType.GOAL_DIFFERENCE;
+        else resultType = PredictionResultType.WINNER;
 
         prediction.setPointsEarned(resultType.getPoints() * match.getPhase().getMultiplier());
         prediction.setResultType(resultType);

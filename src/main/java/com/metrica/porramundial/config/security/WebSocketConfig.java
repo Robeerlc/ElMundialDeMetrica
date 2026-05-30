@@ -1,6 +1,5 @@
-package com.metrica.porramundial.config;
+package com.metrica.porramundial.config.security;
 
-import com.metrica.porramundial.config.security.JwtService;
 import org.jspecify.annotations.NonNull;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.messaging.Message;

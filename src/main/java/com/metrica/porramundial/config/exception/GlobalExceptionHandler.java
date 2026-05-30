@@ -30,11 +30,7 @@ public class GlobalExceptionHandler {
                 .stream()
                 .map(fieldError -> fieldError.getField() + ": " + fieldError.getDefaultMessage())
                 .collect(Collectors.joining("; "));
-
-        if (message.isBlank()) {
-            message = "La solicitud contiene datos inválidos.";
-        }
-
+        if (message.isBlank()) message = "La solicitud contiene datos inválidos.";
         ErrorResponse error = new ErrorResponse(HttpStatus.BAD_REQUEST.value(), "Bad Request", message, LocalDateTime.now());
         return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(error);
     }
