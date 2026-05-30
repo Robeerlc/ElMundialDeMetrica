@@ -50,7 +50,6 @@ public class LiveMatchUpdaterService {
                         if (dbMatch.getApiMatchId().equals(liveFixture.id())) {
 
                             String apiStatus = liveFixture.status();
-                            // debug: print score and penalties to inspect if penalties are being reported
                             try {
                                 System.out.println("[LIVE] matchId=" + liveFixture.id() + " status=" + apiStatus + " score=" + liveFixture.score() + " penalties=" + (liveFixture.score() != null ? liveFixture.score().penalties() : null));
                             } catch (Exception ignore) {
@@ -64,14 +63,12 @@ public class LiveMatchUpdaterService {
                                     dbMatch.setIsLocked(true);
                                     System.out.println("¡PARTIDO EN JUEGO! Bloqueando predicciones para: " + dbMatch.getHomeTeam() + " vs " + dbMatch.getAwayTeam());
                                 }
-                                // update goals (we explicitly IGNORE penalty-shootout goals which are in score.penalties())
                                 dbMatch.setHomeGoals(homeGoals);
                                 dbMatch.setAwayGoals(awayGoals);
                                 System.out.println("[UPDATE] " + dbMatch.getHomeTeam() + "-" + dbMatch.getAwayTeam() + " -> " + homeGoals + "-" + awayGoals + " (penalties ignored)");
                                 matchRepository.save(dbMatch);
                             } else if ("FINISHED".equals(apiStatus) || "AWARDED".equals(apiStatus)) {
                                 if (dbMatch.getStatus() != MatchStatus.FINISHED) {
-                                    // Determine winner from API's score.winner() instead of comparing goals (penalties should not affect winner here)
                                     String winnerField = null;
                                     if (liveFixture.score() != null) winnerField = liveFixture.score().winner();
                                     String winningTeam = null;
@@ -80,7 +77,6 @@ public class LiveMatchUpdaterService {
 
                                     dbMatch.setStatus(MatchStatus.FINISHED);
                                     dbMatch.setIsLocked(true);
-                                    // when match finishes, use fullTime as the official match goals (penalties excluded)
                                     dbMatch.setHomeGoals(homeGoals);
                                     dbMatch.setAwayGoals(awayGoals);
                                     System.out.println("[FINISHED] " + dbMatch.getHomeTeam() + "-" + dbMatch.getAwayTeam() + " final " + homeGoals + "-" + awayGoals + " (winnerField=" + winnerField + ")");
