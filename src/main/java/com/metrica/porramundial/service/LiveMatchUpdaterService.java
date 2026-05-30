@@ -50,6 +50,12 @@ public class LiveMatchUpdaterService {
                         if (dbMatch.getApiMatchId().equals(liveFixture.id())) {
 
                             String apiStatus = liveFixture.status();
+                            // debug: print score and penalties to inspect if penalties are being reported
+                            try {
+                                System.out.println("[LIVE] matchId=" + liveFixture.id() + " status=" + apiStatus + " score=" + liveFixture.score() + " penalties=" + (liveFixture.score() != null ? liveFixture.score().penalties() : null));
+                            } catch (Exception ignore) {
+                            }
+
                             int homeGoals = resolveHomeGoals(liveFixture);
                             int awayGoals = resolveAwayGoals(liveFixture);
                             if ("IN_PLAY".equals(apiStatus) || "PAUSED".equals(apiStatus)) {
@@ -58,8 +64,10 @@ public class LiveMatchUpdaterService {
                                     dbMatch.setIsLocked(true);
                                     System.out.println("¡PARTIDO EN JUEGO! Bloqueando predicciones para: " + dbMatch.getHomeTeam() + " vs " + dbMatch.getAwayTeam());
                                 }
+                                // update goals (we explicitly IGNORE penalty-shootout goals which are in score.penalties())
                                 dbMatch.setHomeGoals(homeGoals);
                                 dbMatch.setAwayGoals(awayGoals);
+                                System.out.println("[UPDATE] " + dbMatch.getHomeTeam() + "-" + dbMatch.getAwayTeam() + " -> " + homeGoals + "-" + awayGoals + " (penalties ignored)");
                                 matchRepository.save(dbMatch);
                             } else if ("FINISHED".equals(apiStatus) || "AWARDED".equals(apiStatus)) {
                                 if (dbMatch.getStatus() != MatchStatus.FINISHED) {
@@ -68,8 +76,10 @@ public class LiveMatchUpdaterService {
                                     else if (awayGoals > homeGoals) winningTeam = dbMatch.getAwayTeam();
                                     dbMatch.setStatus(MatchStatus.FINISHED);
                                     dbMatch.setIsLocked(true);
+                                    // when match finishes, use the resolved goals (penalties are ignored here)
                                     dbMatch.setHomeGoals(homeGoals);
                                     dbMatch.setAwayGoals(awayGoals);
+                                    System.out.println("[FINISHED] " + dbMatch.getHomeTeam() + "-" + dbMatch.getAwayTeam() + " final " + homeGoals + "-" + awayGoals + " (penalties ignored: " + (liveFixture.score() != null ? liveFixture.score().penalties() : null) + ")");
                                     dbMatch.setWinningTeam(winningTeam);
                                     matchRepository.save(dbMatch);
                                     System.out.println("PARTIDO TERMINADO (" + homeGoals + "-" + awayGoals + "). Calculando puntos de los usuarios...");
@@ -88,19 +98,43 @@ public class LiveMatchUpdaterService {
     private int resolveHomeGoals(FootballDataResponse.MatchData liveFixture) {
         if (liveFixture.score() == null) return 0;
         FootballDataResponse.ScoreData score = liveFixture.score();
-        if (score.fullTime() != null && score.fullTime().home() != null) return score.fullTime().home();
-        if (score.regularTime() != null && score.regularTime().home() != null) return score.regularTime().home();
-        if (score.halfTime() != null && score.halfTime().home() != null) return score.halfTime().home();
-        return 0;
+        String status = liveFixture.status();
+        // For live matches prefer current-running values (regularTime, halfTime, extraTime), avoid using penalties
+        if ("IN_PLAY".equals(status) || "PAUSED".equals(status)) {
+            if (score.regularTime() != null && score.regularTime().home() != null) return score.regularTime().home();
+            if (score.halfTime() != null && score.halfTime().home() != null) return score.halfTime().home();
+            if (score.extraTime() != null && score.extraTime().home() != null) return score.extraTime().home();
+            if (score.fullTime() != null && score.fullTime().home() != null) return score.fullTime().home();
+            return 0;
+        } else {
+            // For finished/awarded matches prefer fullTime then extraTime, but still ignore penalties
+            if (score.fullTime() != null && score.fullTime().home() != null) return score.fullTime().home();
+            if (score.extraTime() != null && score.extraTime().home() != null) return score.extraTime().home();
+            if (score.regularTime() != null && score.regularTime().home() != null) return score.regularTime().home();
+            if (score.halfTime() != null && score.halfTime().home() != null) return score.halfTime().home();
+            return 0;
+        }
     }
 
     private int resolveAwayGoals(FootballDataResponse.MatchData liveFixture) {
         if (liveFixture.score() == null) return 0;
         FootballDataResponse.ScoreData score = liveFixture.score();
-        if (score.fullTime() != null && score.fullTime().away() != null) return score.fullTime().away();
-        if (score.regularTime() != null && score.regularTime().away() != null) return score.regularTime().away();
-        if (score.halfTime() != null && score.halfTime().away() != null) return score.halfTime().away();
-        return 0;
+        String status = liveFixture.status();
+        // For live matches prefer current-running values (regularTime, halfTime, extraTime), avoid using penalties
+        if ("IN_PLAY".equals(status) || "PAUSED".equals(status)) {
+            if (score.regularTime() != null && score.regularTime().away() != null) return score.regularTime().away();
+            if (score.halfTime() != null && score.halfTime().away() != null) return score.halfTime().away();
+            if (score.extraTime() != null && score.extraTime().away() != null) return score.extraTime().away();
+            if (score.fullTime() != null && score.fullTime().away() != null) return score.fullTime().away();
+            return 0;
+        } else {
+            // For finished/awarded matches prefer fullTime then extraTime, but still ignore penalties
+            if (score.fullTime() != null && score.fullTime().away() != null) return score.fullTime().away();
+            if (score.extraTime() != null && score.extraTime().away() != null) return score.extraTime().away();
+            if (score.regularTime() != null && score.regularTime().away() != null) return score.regularTime().away();
+            if (score.halfTime() != null && score.halfTime().away() != null) return score.halfTime().away();
+            return 0;
+        }
     }
 
     @Scheduled(fixedRate = 60000)
