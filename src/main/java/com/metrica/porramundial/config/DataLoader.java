@@ -35,22 +35,17 @@ public class DataLoader implements CommandLineRunner {
     @Override
     public void run(String @NonNull ... args) {
         System.out.println("Arrancando inyector de partidos...");
-        fetchAndSaveMatches("WC", false);
-        fetchAndSaveMatches("CL", true);
-    }
-
-    private void fetchAndSaveMatches(String competitionCode, boolean onlyFinal) {
-        System.out.println("Buscando partidos para la competición: " + competitionCode + "...");
+        System.out.println("Buscando partidos para el Mndial");
         try {
             FootballDataResponse apiResponse = restClient.get()
-                    .uri("/competitions/" + competitionCode + "/matches")
+                    .uri("/competitions/" + "WC" + "/matches")
                     .retrieve()
                     .body(FootballDataResponse.class);
             if (apiResponse != null && apiResponse.matches() != null) {
                 List<Match> matchesToSave = new ArrayList<>();
                 for (FootballDataResponse.MatchData data : apiResponse.matches()) {
 
-                    if (onlyFinal && !"FINAL".equalsIgnoreCase(data.stage())) continue;
+                    if (!"FINAL".equalsIgnoreCase(data.stage())) continue;
                     if (matchRepository.existsByApiMatchId(data.id())) continue;
                     if (data.homeTeam() == null || data.awayTeam() == null ||
                             data.homeTeam().shortName() == null || data.awayTeam().shortName() == null) continue;
@@ -95,12 +90,12 @@ public class DataLoader implements CommandLineRunner {
 
                 if (!matchesToSave.isEmpty()) {
                     matchRepository.saveAll(matchesToSave);
-                    System.out.println(matchesToSave.size() + " NUEVOS partidos inyectados para " + competitionCode);
+                    System.out.println(matchesToSave.size() + " NUEVOS partidos inyectados para " + "WC");
                 } else
-                    System.out.println("Todos los partidos de " + competitionCode + " requeridos ya estaban en la BD.");
+                    System.out.println("Todos los partidos de " + "WC" + " requeridos ya estaban en la BD.");
             }
         } catch (Exception e) {
-            System.err.println("Error con Football-Data (" + competitionCode + "): " + e.getMessage());
+            System.err.println("Error con Football-Data (" + "WC" + "): " + e.getMessage());
         }
     }
 
