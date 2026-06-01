@@ -45,7 +45,6 @@ public class DataLoader implements CommandLineRunner {
                 List<Match> matchesToSave = new ArrayList<>();
                 for (FootballDataResponse.MatchData data : apiResponse.matches()) {
 
-                    if (!"FINAL".equalsIgnoreCase(data.stage())) continue;
                     if (matchRepository.existsByApiMatchId(data.id())) continue;
                     if (data.homeTeam() == null || data.awayTeam() == null ||
                             data.homeTeam().shortName() == null || data.awayTeam().shortName() == null) continue;
