@@ -35,7 +35,7 @@ public class LiveMatchUpdaterService {
     public void fetchLiveResults() {
         List<Match> activeMatches = matchRepository.findByStatusNot(MatchStatus.FINISHED);
         if (activeMatches.isEmpty()) return;
-        String[] competitions = {"WC", "CL"};
+        String[] competitions = {"WC"};
 
         for (String comp : competitions) {
             try {
