@@ -18,6 +18,9 @@ public record RegisterRequest(
         String fullName,
 
         @NotNull(message = "El país no puede ser nulo")
-        Country country
+        Country country,
+
+        @NotBlank(message = "Debes elegir un avatar")
+        String avatar
 ) {
 }

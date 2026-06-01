@@ -1,5 +1,6 @@
 package com.metrica.porramundial.domain.entity;
 
+import com.metrica.porramundial.domain.enums.Country;
 import jakarta.persistence.*;
 import lombok.*;
 
@@ -23,6 +24,13 @@ public class ChatMessage {
 
     @Column(nullable = false, length = 500)
     private String message;
+
+    @Column(nullable = false)
+    private String avatar;
+
+    @Enumerated(EnumType.STRING)
+    @Column(nullable = false)
+    private Country country;
 
     @Column(nullable = false)
     private LocalDateTime timestamp;

@@ -2,9 +2,9 @@ package com.metrica.porramundial.service;
 
 import com.metrica.porramundial.config.security.JwtService;
 import com.metrica.porramundial.domain.entity.User;
-import com.metrica.porramundial.dto.auth.PasswordUpdateRequest;
 import com.metrica.porramundial.dto.auth.AuthResponse;
 import com.metrica.porramundial.dto.auth.LoginRequest;
+import com.metrica.porramundial.dto.auth.PasswordUpdateRequest;
 import com.metrica.porramundial.dto.auth.RegisterRequest;
 import com.metrica.porramundial.repository.UserRepository;
 import jakarta.mail.internet.MimeMessage;
@@ -72,7 +72,7 @@ public class AuthService {
             throw new IllegalArgumentException("Este correo ya está registrado.");
 
         String token = UUID.randomUUID().toString();
-        User user = User.builder().email(normalizedEmail).password(passwordEncoder.encode(request.password())).fullName(normalizedFullName).country(request.country()).activationToken(token).enabled(false).build();
+        User user = User.builder().email(normalizedEmail).password(passwordEncoder.encode(request.password())).fullName(normalizedFullName).country(request.country()).avatar(request.avatar()).activationToken(token).enabled(false).build();
         userRepository.save(user);
         enviarCorreoActivacion(user.getEmail(), token);
     }
@@ -108,7 +108,7 @@ public class AuthService {
 
     public void changePassword(PasswordUpdateRequest request, String email) {
         User user = userRepository.findByEmail(email)
-                                  .orElseThrow(() -> new IllegalArgumentException("Usuario no encontrado"));
+                .orElseThrow(() -> new IllegalArgumentException("Usuario no encontrado"));
         authenticationManager.authenticate(new UsernamePasswordAuthenticationToken(user.getEmail(), request.oldPassword()));
 
         user.setPassword(passwordEncoder.encode(request.newPassword()));

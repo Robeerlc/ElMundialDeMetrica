@@ -34,6 +34,10 @@ public class User implements UserDetails {
 
     @Column(nullable = false)
     @Builder.Default
+    private String avatar = "default.png";
+
+    @Column(nullable = false)
+    @Builder.Default
     private Integer totalPoints = 0;
 
     @Column(nullable = false)
