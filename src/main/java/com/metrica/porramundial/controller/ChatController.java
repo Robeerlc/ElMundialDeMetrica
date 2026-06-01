@@ -33,9 +33,8 @@ public class ChatController {
         String email = authentication != null ? authentication.getName() : "";
         User user = userRepository.findByEmail(email)
                 .orElseThrow(() -> new IllegalArgumentException("Usuario no encontrado"));
-
         ChatMessage chatMessage = ChatMessage.builder()
-                .username(user.getFullName().split(" ")[0])
+                .username(user.getFullName().split("@")[0])
                 .avatar(user.getAvatar())
                 .country(user.getCountry())
                 .message(request.message())
