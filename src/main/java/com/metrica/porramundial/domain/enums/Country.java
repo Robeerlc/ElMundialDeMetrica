@@ -4,5 +4,6 @@ public enum Country {
     SPAIN,
     PERU,
     CHILE,
-    PORTUGAL
+    PORTUGAL,
+    USA
 }
