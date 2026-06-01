@@ -1,5 +1,6 @@
 package com.metrica.porramundial.controller;
 
+import com.metrica.porramundial.dto.auth.PasswordUpdateRequest;
 import com.metrica.porramundial.dto.auth.AuthResponse;
 import com.metrica.porramundial.dto.auth.LoginRequest;
 import com.metrica.porramundial.dto.auth.RegisterRequest;
@@ -7,6 +8,7 @@ import com.metrica.porramundial.service.AuthService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
@@ -74,5 +76,12 @@ public class AuthController {
                                 </html>
                 """;
         return ResponseEntity.ok().header("Content-Type", "text/html; charset=UTF-8").body(htmlResponse);
+    }
+
+    @PatchMapping("/password-change")
+    public ResponseEntity<?> changePassword(@RequestBody PasswordUpdateRequest request, Authentication authentication) {
+        String username = authentication.getName();
+        this.authService.changePassword(request, username);
+        return ResponseEntity.ok().build();
     }
 }

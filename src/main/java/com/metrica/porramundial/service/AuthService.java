@@ -2,6 +2,7 @@ package com.metrica.porramundial.service;
 
 import com.metrica.porramundial.config.security.JwtService;
 import com.metrica.porramundial.domain.entity.User;
+import com.metrica.porramundial.dto.auth.PasswordUpdateRequest;
 import com.metrica.porramundial.dto.auth.AuthResponse;
 import com.metrica.porramundial.dto.auth.LoginRequest;
 import com.metrica.porramundial.dto.auth.RegisterRequest;
@@ -103,5 +104,14 @@ public class AuthService {
         } catch (Exception e) {
             System.err.println("Error al enviar correo de activación a " + emailDestino + ": " + e.getMessage());
         }
+    }
+
+    public void changePassword(PasswordUpdateRequest request, String email) {
+        User user = userRepository.findByEmail(email)
+                                  .orElseThrow(() -> new IllegalArgumentException("Usuario no encontrado"));
+        authenticationManager.authenticate(new UsernamePasswordAuthenticationToken(user.getEmail(), request.oldPassword()));
+
+        user.setPassword(passwordEncoder.encode(request.newPassword()));
+        this.userRepository.save(user);
     }
 }
