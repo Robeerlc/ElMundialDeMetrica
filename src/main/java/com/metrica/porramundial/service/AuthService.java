@@ -2,10 +2,7 @@ package com.metrica.porramundial.service;
 
 import com.metrica.porramundial.config.security.JwtService;
 import com.metrica.porramundial.domain.entity.User;
-import com.metrica.porramundial.dto.auth.AuthResponse;
-import com.metrica.porramundial.dto.auth.LoginRequest;
-import com.metrica.porramundial.dto.auth.PasswordUpdateRequest;
-import com.metrica.porramundial.dto.auth.RegisterRequest;
+import com.metrica.porramundial.dto.auth.*;
 import com.metrica.porramundial.repository.UserRepository;
 import jakarta.mail.internet.MimeMessage;
 import jakarta.transaction.Transactional;
@@ -106,12 +103,16 @@ public class AuthService {
         }
     }
 
-    public void changePassword(PasswordUpdateRequest request, String email) {
+    public void changeProfile(UpdateProfileRequest request, String email) {
         User user = userRepository.findByEmail(email)
                 .orElseThrow(() -> new IllegalArgumentException("Usuario no encontrado"));
-        authenticationManager.authenticate(new UsernamePasswordAuthenticationToken(user.getEmail(), request.oldPassword()));
-
-        user.setPassword(passwordEncoder.encode(request.newPassword()));
-        this.userRepository.save(user);
+        if (request.avatar() != null && !request.avatar().isBlank()) user.setAvatar(request.avatar());
+        if (request.newPassword() != null && !request.newPassword().isBlank()) {
+            if (request.currentPassword() == null || !passwordEncoder.matches(request.currentPassword(), user.getPassword())) {
+                throw new IllegalArgumentException("La contraseña actual es incorrecta.");
+            }
+            user.setPassword(passwordEncoder.encode(request.newPassword()));
+        }
+        userRepository.save(user);
     }
 }
