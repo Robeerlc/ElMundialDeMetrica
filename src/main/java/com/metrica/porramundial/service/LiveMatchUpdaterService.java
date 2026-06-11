@@ -39,11 +39,12 @@ public class LiveMatchUpdaterService {
     public void fetchLiveResults() {
         List<Match> activeMatches = matchRepository.findByStatusNot(MatchStatus.FINISHED);
         if (activeMatches.isEmpty()) return;
-        String[] competitions = {"WC"};
-        Map<Long, Match> activeMatchesMap = activeMatches.stream()
-                .collect(Collectors.toMap(Match::getApiMatchId, match -> match));
+
+        Map<String, Match> activeMatchesMap = activeMatches.stream()
+                .collect(Collectors.toMap(m -> String.valueOf(m.getApiMatchId()), match -> match));
 
         List<Match> matchesToSave = new ArrayList<>();
+        String[] competitions = {"WC"};
 
         for (String comp : competitions) {
             try {
@@ -53,15 +54,9 @@ public class LiveMatchUpdaterService {
                         .body(FootballDataResponse.class);
                 if (apiResponse == null || apiResponse.matches() == null) continue;
                 for (FootballDataResponse.MatchData liveFixture : apiResponse.matches()) {
-
-                    Match dbMatch = activeMatchesMap.get(liveFixture.id());
+                    Match dbMatch = activeMatchesMap.get(String.valueOf(liveFixture.id()));
                     if (dbMatch != null) {
                         String apiStatus = liveFixture.status();
-                        try {
-                            System.out.println("[LIVE] matchId=" + liveFixture.id() + " status=" + apiStatus + " score=" + liveFixture.score() + " penalties=" + (liveFixture.score() != null ? liveFixture.score().penalties() : null));
-                        } catch (Exception ignore) {
-                        }
-
                         int newHomeGoals = resolveHomeGoals(liveFixture);
                         int newAwayGoals = resolveAwayGoals(liveFixture);
 
@@ -74,84 +69,49 @@ public class LiveMatchUpdaterService {
                             if (dbMatch.getStatus() == MatchStatus.PENDING) {
                                 dbMatch.setStatus(MatchStatus.IN_PROGRESS);
                                 dbMatch.setIsLocked(true);
-                                System.out.println("¡PARTIDO EN JUEGO! Bloqueando predicciones para: " + dbMatch.getHomeTeam() + " vs " + dbMatch.getAwayTeam());
                             }
                             dbMatch.setHomeGoals(finalHomeGoals);
                             dbMatch.setAwayGoals(finalAwayGoals);
-                            System.out.println("[UPDATE] " + dbMatch.getHomeTeam() + "-" + dbMatch.getAwayTeam() + " -> " + finalHomeGoals + "-" + finalAwayGoals + " (penalties ignored)");
                             needsSave = true;
-
                         } else if ("FINISHED".equals(apiStatus) || "AWARDED".equals(apiStatus)) {
                             if (dbMatch.getStatus() != MatchStatus.FINISHED) {
-                                String winnerField = null;
-                                if (liveFixture.score() != null) winnerField = liveFixture.score().winner();
-
+                                String winnerField = (liveFixture.score() != null) ? liveFixture.score().winner() : null;
                                 String winningTeam = null;
                                 if ("HOME_TEAM".equalsIgnoreCase(winnerField)) winningTeam = dbMatch.getHomeTeam();
                                 else if ("AWAY_TEAM".equalsIgnoreCase(winnerField)) winningTeam = dbMatch.getAwayTeam();
-                                else {
-                                    if (finalHomeGoals > finalAwayGoals) winningTeam = dbMatch.getHomeTeam();
-                                    else if (finalAwayGoals > finalHomeGoals) winningTeam = dbMatch.getAwayTeam();
-                                }
+                                else if (finalHomeGoals > finalAwayGoals) winningTeam = dbMatch.getHomeTeam();
+                                else if (finalAwayGoals > finalHomeGoals) winningTeam = dbMatch.getAwayTeam();
 
                                 dbMatch.setStatus(MatchStatus.FINISHED);
                                 dbMatch.setIsLocked(true);
                                 dbMatch.setHomeGoals(finalHomeGoals);
                                 dbMatch.setAwayGoals(finalAwayGoals);
                                 dbMatch.setWinningTeam(winningTeam);
-
-                                System.out.println("[FINISHED] " + dbMatch.getHomeTeam() + "-" + dbMatch.getAwayTeam() + " final " + finalHomeGoals + "-" + finalAwayGoals + " (Winner=" + winningTeam + ")");
                                 needsSave = true;
-
-                                System.out.println("PARTIDO TERMINADO (" + finalHomeGoals + "-" + finalAwayGoals + "). Calculando puntos de los usuarios...");
                                 this.scoringService.scoreMatch(dbMatch);
                             }
                         }
-
-                        if (needsSave) {
-                            matchesToSave.add(dbMatch);
-                        }
+                        if (needsSave) matchesToSave.add(dbMatch);
                     }
                 }
             } catch (Exception e) {
-                System.err.println("Error al contactar con Football-Data para " + comp + ": " + e.getMessage());
+                System.err.println("Error con Football-Data: " + e.getMessage());
             }
         }
-
         if (!matchesToSave.isEmpty()) matchRepository.saveAll(matchesToSave);
     }
 
     private int resolveHomeGoals(FootballDataResponse.MatchData liveFixture) {
         if (liveFixture.score() == null) return -1;
-        FootballDataResponse.ScoreData score = liveFixture.score();
-
-        if (score.regularTime() != null && score.regularTime().home() != null) {
-            int goals = score.regularTime().home();
-            if (score.extraTime() != null && score.extraTime().home() != null) {
-                goals += score.extraTime().home();
-            }
-            return goals;
-        }
-
-        if (score.fullTime() != null && score.fullTime().home() != null) {
-            return score.fullTime().home();
-        }
+        if (liveFixture.score().fullTime() != null && liveFixture.score().fullTime().home() != null)
+            return liveFixture.score().fullTime().home();
         return -1;
     }
 
     private int resolveAwayGoals(FootballDataResponse.MatchData liveFixture) {
         if (liveFixture.score() == null) return -1;
-        FootballDataResponse.ScoreData score = liveFixture.score();
-
-        if (score.regularTime() != null && score.regularTime().away() != null) {
-            int goals = score.regularTime().away();
-            if (score.extraTime() != null && score.extraTime().away() != null) goals += score.extraTime().away();
-            return goals;
-        }
-
-        if (score.fullTime() != null && score.fullTime().away() != null) {
-            return score.fullTime().away();
-        }
+        if (liveFixture.score().fullTime() != null && liveFixture.score().fullTime().away() != null)
+            return liveFixture.score().fullTime().away();
         return -1;
     }
 
@@ -161,17 +121,9 @@ public class LiveMatchUpdaterService {
         LocalDateTime horaActualUtc = LocalDateTime.now(java.time.ZoneOffset.UTC);
         List<Match> activeMatches = matchRepository.findByStatusNot(MatchStatus.FINISHED);
         for (Match m : activeMatches) {
-            if (m.getStatus() == MatchStatus.PENDING) {
-                boolean shouldBeLocked = horaActualUtc.isAfter(m.getStartTime().minusHours(1));
-                if (m.getIsLocked() != shouldBeLocked) {
-                    m.setIsLocked(shouldBeLocked);
-                    matchRepository.save(m);
-                    if (shouldBeLocked)
-                        System.out.println("[BLOQUEO] Tiempo límite superado. Partido cerrado: " + m.getHomeTeam() + " vs " + m.getAwayTeam());
-                    else
-                        System.out.println("[DESBLOQUEO AUTO-CORRECCIÓN] Partido reabierto: " + m.getHomeTeam() + " vs " + m.getAwayTeam());
-
-                }
+            if (m.getStatus() == MatchStatus.PENDING && horaActualUtc.isAfter(m.getStartTime().minusHours(1))) {
+                m.setIsLocked(true);
+                matchRepository.save(m);
             }
         }
     }
