@@ -138,9 +138,7 @@ public class DataLoader implements CommandLineRunner {
         }
 
         if (score.fullTime() != null && score.fullTime().home() != null) {
-            int goals = score.fullTime().home();
-            if (score.penalties() != null && score.penalties().home() != null) goals -= score.penalties().home();
-            return Math.max(0, goals);
+            return score.fullTime().home();
         }
         return -1;
     }
@@ -156,9 +154,7 @@ public class DataLoader implements CommandLineRunner {
         }
 
         if (score.fullTime() != null && score.fullTime().away() != null) {
-            int goals = score.fullTime().away();
-            if (score.penalties() != null && score.penalties().away() != null) goals -= score.penalties().away();
-            return Math.max(0, goals);
+            return score.fullTime().away();
         }
         return -1;
     }
