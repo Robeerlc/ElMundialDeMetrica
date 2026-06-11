@@ -4,9 +4,12 @@ import com.metrica.porramundial.domain.entity.Match;
 import com.metrica.porramundial.domain.entity.Prediction;
 import com.metrica.porramundial.domain.entity.PredictionHistory;
 import com.metrica.porramundial.domain.entity.User;
+import com.metrica.porramundial.domain.enums.MatchStatus;
 import com.metrica.porramundial.domain.enums.PredictionResultType;
+import com.metrica.porramundial.repository.MatchRepository;
 import com.metrica.porramundial.repository.PredictionHistoryRepository;
 import com.metrica.porramundial.repository.PredictionRepository;
+import com.metrica.porramundial.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -20,6 +23,8 @@ public class ScoringService {
 
     private final PredictionRepository predictionRepository;
     private final PredictionHistoryRepository predictionHistoryRepository;
+    private final MatchRepository matchRepository;
+    private final UserRepository userRepository;
 
     @Transactional
     public void scoreMatch(Match match) {
@@ -70,5 +75,52 @@ public class ScoringService {
 
         prediction.setPointsEarned(resultType.getPoints() * match.getPhase().getMultiplier());
         prediction.setResultType(resultType);
+    }
+
+    @Transactional
+    public void resetMatchAndRecalculate(Long matchId) {
+        System.out.println("[ADMIN] Iniciando reseteo del partido con ID: " + matchId);
+
+        Match match = matchRepository.findById(matchId)
+                .orElseThrow(() -> new IllegalArgumentException("Partido no encontrado"));
+        match.setStatus(MatchStatus.IN_PROGRESS);
+        match.setWinningTeam(null);
+        match.setHomeGoals(0);
+        match.setAwayGoals(0);
+        matchRepository.save(match);
+
+        List<Prediction> predictions = predictionRepository.findByMatch(match);
+        for (Prediction p : predictions) {
+            p.setPointsEarned(0);
+            p.setResultType(null);
+        }
+        predictionRepository.saveAll(predictions);
+
+        List<User> allUsers = userRepository.findAll();
+        for (User user : allUsers) {
+            int totalPoints = 0;
+            int exactMatches = 0;
+            int goalDiff = 0;
+            int winnerMatches = 0;
+
+            List<Prediction> userPredictions = predictionRepository.findByUser(user);
+            for (Prediction p : userPredictions) {
+                if (p.getPointsEarned() != null && p.getPointsEarned() > 0) {
+                    totalPoints += p.getPointsEarned();
+                    switch (p.getResultType().name()) {
+                        case "EXACT_MATCH" -> exactMatches++;
+                        case "GOAL_DIFFERENCE" -> goalDiff++;
+                        case "WINNER" -> winnerMatches++;
+                    }
+                }
+            }
+
+            user.setTotalPoints(totalPoints);
+            user.setExactMatchesCount(exactMatches);
+            user.setGoalDiffMatchesCount(goalDiff);
+            user.setWinnerMatchesCount(winnerMatches);
+        }
+        userRepository.saveAll(allUsers);
+        System.out.println("[ADMIN] Reseteo completado. Ranking recalculado.");
     }
 }
