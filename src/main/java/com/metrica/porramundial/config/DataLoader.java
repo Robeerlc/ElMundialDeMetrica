@@ -35,7 +35,7 @@ public class DataLoader implements CommandLineRunner {
     @Override
     public void run(String @NonNull ... args) {
         System.out.println("Arrancando inyector de partidos...");
-        System.out.println("Buscando partidos para el Mndial");
+        System.out.println("Buscando partidos para el Mundial");
         try {
             FootballDataResponse apiResponse = restClient.get()
                     .uri("/competitions/" + "WC" + "/matches")
@@ -56,22 +56,27 @@ public class DataLoader implements CommandLineRunner {
                     TournamentPhase phase = mapPhase(data.stage());
                     if (phase == null) continue;
                     MatchStatus status = mapStatus(data.status());
-                    int homeG = 0;
-                    int awayG = 0;
+
+                    int resolvedHome = resolveHomeGoals(data);
+                    int resolvedAway = resolveAwayGoals(data);
+
+                    int homeG = resolvedHome != -1 ? resolvedHome : 0;
+                    int awayG = resolvedAway != -1 ? resolvedAway : 0;
+
                     String winningTeam = null;
 
-                    if (data.score() != null && data.score().fullTime() != null) {
-                        if (data.score().fullTime().home() != null) homeG = data.score().fullTime().home();
-                        if (data.score().fullTime().away() != null) awayG = data.score().fullTime().away();
-
+                    if (data.score() != null) {
                         String winnerField = data.score().winner();
                         if ("HOME_TEAM".equalsIgnoreCase(winnerField)) winningTeam = homeTeam;
                         else if ("AWAY_TEAM".equalsIgnoreCase(winnerField)) winningTeam = awayTeam;
                         else if (status == MatchStatus.FINISHED) {
-                            if (homeG > awayG) winningTeam = homeTeam;
-                            else if (awayG > homeG) winningTeam = awayTeam;
+                            int rawHome = data.score().fullTime() != null && data.score().fullTime().home() != null ? data.score().fullTime().home() : 0;
+                            int rawAway = data.score().fullTime() != null && data.score().fullTime().away() != null ? data.score().fullTime().away() : 0;
+                            if (rawHome > rawAway) winningTeam = homeTeam;
+                            else if (rawAway > rawHome) winningTeam = awayTeam;
                         }
                     }
+
                     Match match = Match.builder()
                             .apiMatchId(data.id())
                             .homeTeam(homeTeam)
@@ -89,12 +94,12 @@ public class DataLoader implements CommandLineRunner {
 
                 if (!matchesToSave.isEmpty()) {
                     matchRepository.saveAll(matchesToSave);
-                    System.out.println(matchesToSave.size() + " NUEVOS partidos inyectados para " + "WC");
+                    System.out.println(matchesToSave.size() + " NUEVOS partidos inyectados para WC");
                 } else
-                    System.out.println("Todos los partidos de " + "WC" + " requeridos ya estaban en la BD.");
+                    System.out.println("Todos los partidos de WC requeridos ya estaban en la BD.");
             }
         } catch (Exception e) {
-            System.err.println("Error con Football-Data (" + "WC" + "): " + e.getMessage());
+            System.err.println("Error con Football-Data (WC): " + e.getMessage());
         }
     }
 
@@ -118,5 +123,43 @@ public class DataLoader implements CommandLineRunner {
             case "FINAL" -> TournamentPhase.FINAL;
             default -> null;
         };
+    }
+
+    private int resolveHomeGoals(FootballDataResponse.MatchData liveFixture) {
+        if (liveFixture.score() == null) return -1;
+        FootballDataResponse.ScoreData score = liveFixture.score();
+
+        if (score.regularTime() != null && score.regularTime().home() != null) {
+            int goals = score.regularTime().home();
+            if (score.extraTime() != null && score.extraTime().home() != null) {
+                goals += score.extraTime().home();
+            }
+            return goals;
+        }
+
+        if (score.fullTime() != null && score.fullTime().home() != null) {
+            int goals = score.fullTime().home();
+            if (score.penalties() != null && score.penalties().home() != null) goals -= score.penalties().home();
+            return Math.max(0, goals);
+        }
+        return -1;
+    }
+
+    private int resolveAwayGoals(FootballDataResponse.MatchData liveFixture) {
+        if (liveFixture.score() == null) return -1;
+        FootballDataResponse.ScoreData score = liveFixture.score();
+
+        if (score.regularTime() != null && score.regularTime().away() != null) {
+            int goals = score.regularTime().away();
+            if (score.extraTime() != null && score.extraTime().away() != null) goals += score.extraTime().away();
+            return goals;
+        }
+
+        if (score.fullTime() != null && score.fullTime().away() != null) {
+            int goals = score.fullTime().away();
+            if (score.penalties() != null && score.penalties().away() != null) goals -= score.penalties().away();
+            return Math.max(0, goals);
+        }
+        return -1;
     }
 }
