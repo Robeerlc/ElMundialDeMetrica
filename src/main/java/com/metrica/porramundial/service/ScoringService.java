@@ -78,15 +78,15 @@ public class ScoringService {
     }
 
     @Transactional
-    public void resetMatchAndRecalculate(Long matchId) {
+    public void resetMatchAndRecalculate(Long matchId, Integer homeGoals, Integer awayGoals) {
         System.out.println("[ADMIN] Iniciando reseteo del partido con ID: " + matchId);
 
         Match match = matchRepository.findById(matchId)
                 .orElseThrow(() -> new IllegalArgumentException("Partido no encontrado"));
         match.setStatus(MatchStatus.IN_PROGRESS);
         match.setWinningTeam(null);
-        match.setHomeGoals(0);
-        match.setAwayGoals(0);
+        match.setHomeGoals(homeGoals);
+        match.setAwayGoals(awayGoals);
         matchRepository.save(match);
 
         List<Prediction> predictions = predictionRepository.findByMatch(match);

@@ -15,10 +15,13 @@ public class AdminController {
     }
 
     @PostMapping("/match/{matchId}/reset")
-    public ResponseEntity<String> resetMatch(@PathVariable Long matchId) {
+    public ResponseEntity<String> resetMatch(
+            @PathVariable Long matchId,
+            @RequestParam(required = false, defaultValue = "0") Integer homeGoals,
+            @RequestParam(required = false, defaultValue = "0") Integer awayGoals) {
         try {
-            scoringService.resetMatchAndRecalculate(matchId);
-            return ResponseEntity.ok("Partido " + matchId + " reseteado y ranking recalculado con éxito.");
+            scoringService.resetMatchAndRecalculate(matchId, homeGoals, awayGoals);
+            return ResponseEntity.ok("Partido " + matchId + " reseteado forzando el marcador " + homeGoals + "-" + awayGoals + ". Ranking recalculado.");
         } catch (Exception e) {
             return ResponseEntity.badRequest().body("Error al resetear el partido: " + e.getMessage());
         }
