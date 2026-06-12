@@ -22,11 +22,24 @@ public class ScoringService {
 
     @Transactional
     public void scoreMatch(Match match) {
+        if (match.getHomeGoals() == null || match.getAwayGoals() == null)
+            throw new IllegalStateException("Match " + match.getId() + " has no result yet");
+
         List<Prediction> predictions = predictionRepository.findByMatch(match);
         for (Prediction prediction : predictions) {
             score(prediction, match);
             User user = prediction.getUser();
             user.setTotalPoints(user.getTotalPoints() + prediction.getPointsEarned());
+
+            if (prediction.getResultType() != null) {
+                switch (prediction.getResultType()) {
+                    case EXACT_MATCH -> user.setExactMatchesCount(user.getExactMatchesCount() + 1);
+                    case GOAL_DIFFERENCE -> user.setGoalDiffMatchesCount(user.getGoalDiffMatchesCount() + 1);
+                    case WINNER -> user.setWinnerMatchesCount(user.getWinnerMatchesCount() + 1);
+                    default -> {}
+                }
+            }
+
             PredictionHistory history = predictionHistoryRepository.findByUser(user)
                     .orElseGet(() -> predictionHistoryRepository.save(PredictionHistory.builder().user(user).build()));
             if (!history.getPredictions().contains(prediction)) history.getPredictions().add(prediction);
@@ -41,9 +54,15 @@ public class ScoringService {
         int realAway = match.getAwayGoals();
 
         boolean correctWinner = Objects.equals(prediction.getWinningTeam(), match.getWinningTeam());
+        boolean correctDiff = (predHome - predAway) == (realHome - realAway);
         boolean exactScore = predHome == realHome && predAway == realAway;
-        PredictionResultType resultType = !correctWinner ? PredictionResultType.LOST :
-                exactScore ? PredictionResultType.EXACT_MATCH : PredictionResultType.WINNER;
+
+        PredictionResultType resultType;
+        if (!correctWinner) resultType = PredictionResultType.LOST;
+        else if (exactScore) resultType = PredictionResultType.EXACT_MATCH;
+        else if (correctDiff) resultType = PredictionResultType.GOAL_DIFFERENCE;
+        else resultType = PredictionResultType.WINNER;
+
         prediction.setPointsEarned(resultType.getPoints() * match.getPhase().getMultiplier());
         prediction.setResultType(resultType);
     }
