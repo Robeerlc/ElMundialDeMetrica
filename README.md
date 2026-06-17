@@ -1,5 +1,5 @@
 # ⚽ El Mundial de METRICA - Plataforma Oficial de Predicciones 2026
-
+https://metrica-mundial-db8485-193-70-44-51.sslip.io/
 ---
 
 ## 🎯 1. Objetivo del Proyecto
