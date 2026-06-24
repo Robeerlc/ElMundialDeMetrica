@@ -107,7 +107,7 @@ public class DataLoader implements CommandLineRunner {
         if (apiStatus == null) return MatchStatus.PENDING;
         return switch (apiStatus) {
             case "FINISHED", "AWARDED" -> MatchStatus.FINISHED;
-            case "IN_PLAY", "PAUSED" -> MatchStatus.IN_PROGRESS;
+            case "IN_PLAY", "PAUSED", "LIVE", "HALFTIME", "EXTRA_TIME", "PENALTY_SHOOTOUT" -> MatchStatus.IN_PROGRESS;
             default -> MatchStatus.PENDING;
         };
     }
