@@ -65,7 +65,7 @@ public class LiveMatchUpdaterService {
 
                         boolean needsSave = false;
 
-                        if ("IN_PLAY".equals(apiStatus) || "PAUSED".equals(apiStatus)) {
+                        if ("IN_PLAY".equals(apiStatus) || "PAUSED".equals(apiStatus) || "LIVE".equals(apiStatus) || "HALFTIME".equals(apiStatus) || "EXTRA_TIME".equals(apiStatus) || "PENALTY_SHOOTOUT".equals(apiStatus)) {
                             if (dbMatch.getStatus() == MatchStatus.PENDING) {
                                 dbMatch.setStatus(MatchStatus.IN_PROGRESS);
                                 dbMatch.setIsLocked(true);
