@@ -8,6 +8,7 @@ import com.metrica.porramundial.repository.MatchRepository;
 import org.jspecify.annotations.NonNull;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.CommandLineRunner;
+import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
 import org.springframework.web.client.RestClient;
 
@@ -32,9 +33,22 @@ public class DataLoader implements CommandLineRunner {
                 .build();
     }
 
+    // 1. Se ejecuta al arrancar el servidor
     @Override
     public void run(String @NonNull ... args) {
-        System.out.println("Arrancando inyector de partidos...");
+        System.out.println("[STARTUP] Arrancando inyector de partidos...");
+        this.fetchAndLoadMatches();
+    }
+
+    // 2. Se ejecuta automáticamente cada 6 horas (21600000 milisegundos)
+    @Scheduled(fixedRate = 21600000)
+    public void autoFetchNewPhases() {
+        System.out.println("[CRON] Buscando actualización del calendario para nuevas fases...");
+        this.fetchAndLoadMatches();
+    }
+
+    // El motor central que hace todo el trabajo
+    private void fetchAndLoadMatches() {
         System.out.println("Buscando partidos para el Mundial");
         try {
             FootballDataResponse apiResponse = restClient.get()
@@ -95,8 +109,9 @@ public class DataLoader implements CommandLineRunner {
                 if (!matchesToSave.isEmpty()) {
                     matchRepository.saveAll(matchesToSave);
                     System.out.println(matchesToSave.size() + " NUEVOS partidos inyectados para WC");
-                } else
+                } else {
                     System.out.println("Todos los partidos de WC requeridos ya estaban en la BD.");
+                }
             }
         } catch (Exception e) {
             System.err.println("Error con Football-Data (WC): " + e.getMessage());
