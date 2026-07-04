@@ -33,21 +33,18 @@ public class DataLoader implements CommandLineRunner {
                 .build();
     }
 
-    // 1. Se ejecuta al arrancar el servidor
     @Override
     public void run(String @NonNull ... args) {
         System.out.println("[STARTUP] Arrancando inyector de partidos...");
         this.fetchAndLoadMatches();
     }
 
-    // 2. Se ejecuta automáticamente cada 6 horas (21600000 milisegundos)
-    @Scheduled(fixedRate = 21600000)
+    @Scheduled(fixedRate = 3600000)
     public void autoFetchNewPhases() {
         System.out.println("[CRON] Buscando actualización del calendario para nuevas fases...");
         this.fetchAndLoadMatches();
     }
 
-    // El motor central que hace todo el trabajo
     private void fetchAndLoadMatches() {
         System.out.println("Buscando partidos para el Mundial");
         try {
