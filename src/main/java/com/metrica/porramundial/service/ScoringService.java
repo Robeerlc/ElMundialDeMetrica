@@ -47,7 +47,7 @@ public class ScoringService {
         }
     }
 
-    private void void score(Prediction prediction, Match match) {
+    private void score(Prediction prediction, Match match) {
         int predHome = prediction.getHomeGoals();
         int predAway = prediction.getAwayGoals();
         int realHome = match.getHomeGoals();
