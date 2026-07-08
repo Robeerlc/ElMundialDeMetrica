@@ -53,23 +53,25 @@ public class ScoringService {
         int realHome = match.getHomeGoals();
         int realAway = match.getAwayGoals();
 
+        boolean exactScore = predHome == realHome && predAway == realAway;
+        boolean correctWinner = Objects.equals(prediction.getWinningTeam(), match.getWinningTeam());
+        boolean predIsDraw = predHome == predAway;
+        boolean realIsDraw = realHome == realAway;
+        
         boolean correctSign = false;
         if (predHome > predAway && realHome > realAway) correctSign = true;
         else if (predHome < predAway && realHome < realAway) correctSign = true;
-        else if (predHome == predAway && realHome == realAway) correctSign = true;
+        else if (predIsDraw && realIsDraw) correctSign = true;
 
-        boolean correctWinner = Objects.equals(prediction.getWinningTeam(), match.getWinningTeam());
         boolean correctDiff = (predHome - predAway) == (realHome - realAway);
-        boolean exactScore = predHome == realHome && predAway == realAway;
-
         PredictionResultType resultType;
-
-        if (!correctSign) resultType = PredictionResultType.LOST;
-        else if (!correctWinner) resultType = PredictionResultType.LOST;
+        
+        if (!correctWinner) resultType = PredictionResultType.LOST;
+        else if (!correctSign) resultType = PredictionResultType.LOST;
         else if (exactScore) resultType = PredictionResultType.EXACT_MATCH;
         else if (correctDiff) resultType = PredictionResultType.GOAL_DIFFERENCE;
         else resultType = PredictionResultType.WINNER;
-        
+    
         prediction.setPointsEarned(resultType.getPoints() * match.getPhase().getMultiplier());
         prediction.setResultType(resultType);
     }
