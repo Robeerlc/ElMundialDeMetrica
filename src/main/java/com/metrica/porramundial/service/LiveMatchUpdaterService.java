@@ -103,15 +103,27 @@ public class LiveMatchUpdaterService {
 
     private int resolveHomeGoals(FootballDataResponse.MatchData liveFixture) {
         if (liveFixture.score() == null) return -1;
-        if (liveFixture.score().fullTime() != null && liveFixture.score().fullTime().home() != null)
-            return liveFixture.score().fullTime().home();
+        FootballDataResponse.ScoreData score = liveFixture.score();
+
+        if (score.regularTime() != null && score.regularTime().home() != null) {
+            int goals = score.regularTime().home();
+            if (score.extraTime() != null && score.extraTime().home() != null) goals += score.extraTime().home();
+            return goals;
+        }
+        if (score.fullTime() != null && score.fullTime().home() != null) return score.fullTime().home();
         return -1;
     }
 
     private int resolveAwayGoals(FootballDataResponse.MatchData liveFixture) {
         if (liveFixture.score() == null) return -1;
-        if (liveFixture.score().fullTime() != null && liveFixture.score().fullTime().away() != null)
-            return liveFixture.score().fullTime().away();
+        FootballDataResponse.ScoreData score = liveFixture.score();
+
+        if (score.regularTime() != null && score.regularTime().away() != null) {
+            int goals = score.regularTime().away();
+            if (score.extraTime() != null && score.extraTime().away() != null) goals += score.extraTime().away();
+            return goals;
+        }
+        if (score.fullTime() != null && score.fullTime().away() != null) return score.fullTime().away();
         return -1;
     }
 
