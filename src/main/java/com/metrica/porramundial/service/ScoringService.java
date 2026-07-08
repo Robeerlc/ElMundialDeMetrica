@@ -47,31 +47,36 @@ public class ScoringService {
         }
     }
 
-    private void score(Prediction prediction, Match match) {
+    private void void score(Prediction prediction, Match match) {
         int predHome = prediction.getHomeGoals();
         int predAway = prediction.getAwayGoals();
         int realHome = match.getHomeGoals();
         int realAway = match.getAwayGoals();
 
+        String predWinner = prediction.getWinningTeam() != null ? prediction.getWinningTeam().trim() : "";
+        String realWinner = match.getWinningTeam() != null ? match.getWinningTeam().trim() : "";
+        boolean correctWinner = predWinner.equalsIgnoreCase(realWinner);
+        
         boolean exactScore = predHome == realHome && predAway == realAway;
-        boolean correctWinner = Objects.equals(prediction.getWinningTeam(), match.getWinningTeam());
+        boolean correctDiff = (predHome - predAway) == (realHome - realAway);
+        
         boolean predIsDraw = predHome == predAway;
         boolean realIsDraw = realHome == realAway;
-        
+
         boolean correctSign = false;
         if (predHome > predAway && realHome > realAway) correctSign = true;
         else if (predHome < predAway && realHome < realAway) correctSign = true;
         else if (predIsDraw && realIsDraw) correctSign = true;
-
-        boolean correctDiff = (predHome - predAway) == (realHome - realAway);
         PredictionResultType resultType;
-        
+
         if (!correctWinner) resultType = PredictionResultType.LOST;
-        else if (!correctSign) resultType = PredictionResultType.LOST;
         else if (exactScore) resultType = PredictionResultType.EXACT_MATCH;
         else if (correctDiff) resultType = PredictionResultType.GOAL_DIFFERENCE;
-        else resultType = PredictionResultType.WINNER;
-    
+        else if (predIsDraw && !realIsDraw) resultType = PredictionResultType.LOST;
+        else if (!predIsDraw && realIsDraw) resultType = PredictionResultType.WINNER;
+        else if (correctSign) resultType = PredictionResultType.WINNER;
+        else resultType = PredictionResultType.LOST;
+
         prediction.setPointsEarned(resultType.getPoints() * match.getPhase().getMultiplier());
         prediction.setResultType(resultType);
     }
