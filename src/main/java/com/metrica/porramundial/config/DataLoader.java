@@ -137,13 +137,29 @@ public class DataLoader implements CommandLineRunner {
         };
     }
 
-    private int resolveHomeGoals(FootballDataResponse.MatchData data) {
-        if (data.score() == null || data.score().fullTime() == null) return -1;
-        return data.score().fullTime().home() != null ? data.score().fullTime().home() : 0;
+    private int resolveHomeGoals(FootballDataResponse.MatchData liveFixture) {
+        if (liveFixture.score() == null) return -1;
+        FootballDataResponse.ScoreData score = liveFixture.score();
+
+        if (score.regularTime() != null && score.regularTime().home() != null) {
+            int goals = score.regularTime().home();
+            if (score.extraTime() != null && score.extraTime().home() != null) goals += score.extraTime().home();
+            return goals;
+        }
+        if (score.fullTime() != null && score.fullTime().home() != null) return score.fullTime().home();
+        return -1;
     }
 
-    private int resolveAwayGoals(FootballDataResponse.MatchData data) {
-        if (data.score() == null || data.score().fullTime() == null) return -1;
-        return data.score().fullTime().away() != null ? data.score().fullTime().away() : 0;
+    private int resolveAwayGoals(FootballDataResponse.MatchData liveFixture) {
+        if (liveFixture.score() == null) return -1;
+        FootballDataResponse.ScoreData score = liveFixture.score();
+
+        if (score.regularTime() != null && score.regularTime().away() != null) {
+            int goals = score.regularTime().away();
+            if (score.extraTime() != null && score.extraTime().away() != null) goals += score.extraTime().away();
+            return goals;
+        }
+        if (score.fullTime() != null && score.fullTime().away() != null) return score.fullTime().away();
+        return -1;
     }
 }
