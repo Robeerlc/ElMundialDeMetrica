@@ -59,24 +59,14 @@ public class ScoringService {
         
         boolean exactScore = predHome == realHome && predAway == realAway;
         boolean correctDiff = (predHome - predAway) == (realHome - realAway);
-        
-        boolean predIsDraw = predHome == predAway;
-        boolean realIsDraw = realHome == realAway;
 
-        boolean correctSign = false;
-        if (predHome > predAway && realHome > realAway) correctSign = true;
-        else if (predHome < predAway && realHome < realAway) correctSign = true;
-        else if (predIsDraw && realIsDraw) correctSign = true;
         PredictionResultType resultType;
 
         if (!correctWinner) resultType = PredictionResultType.LOST;
         else if (exactScore) resultType = PredictionResultType.EXACT_MATCH;
         else if (correctDiff) resultType = PredictionResultType.GOAL_DIFFERENCE;
-        else if (predIsDraw && !realIsDraw) resultType = PredictionResultType.LOST;
-        else if (!predIsDraw && realIsDraw) resultType = PredictionResultType.WINNER;
-        else if (correctSign) resultType = PredictionResultType.WINNER;
-        else resultType = PredictionResultType.LOST;
-
+        else resultType = PredictionResultType.WINNER;
+        
         prediction.setPointsEarned(resultType.getPoints() * match.getPhase().getMultiplier());
         prediction.setResultType(resultType);
     }
